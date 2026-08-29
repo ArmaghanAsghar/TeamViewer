@@ -14,35 +14,41 @@ flowchart LR
 
 | Phase | Deliver | Status |
 |-------|---------|--------|
-| **P0** | Brain + rules; empty app shell / tooling as needed | Planned |
-| **D0** | RE intake + PERSONAS + first **2–4** journeys `persona-ready` + stories → **then** architecture lock | **Start here** |
-| **D1** | Remaining golden-path journeys to `persona-ready` | Blocked on D0 |
+| **P0** | Brain + rules; empty app shell / tooling as needed | Brain present; no app skeleton yet |
+| **D0** | RE intake + PERSONAS + first **2–4** journeys `persona-ready` + stories → **then** architecture lock | **In progress** — stories done; architecture **proposed**, not locked; journeys not yet `client-validated` |
+| **D1** | Remaining golden-path journeys to `persona-ready` | Blocked on D0 lock + J0–J3 build-ready |
 | **B1** | Feature work per `build-ready` journey | Blocked on gates |
 
 Journey statuses: `draft` → `persona-ready` → `client-validated` → `build-ready` (solo may self-mark `client-validated`).
 
 ## D0 acceptance
 
-- [ ] PRODUCT north star, devices, deploy, user model, pains, workaround, out-of-scope, NFRs filled
-- [ ] PERSONAS drafted with role cards
-- [ ] First 2–4 journeys `persona-ready` with stories
-- [ ] MODULES provisional draft
+- [x] PRODUCT north star, devices, deploy, user model, pains, workaround, out-of-scope, NFRs filled
+- [x] PERSONAS drafted with role cards
+- [x] First 2–4 journeys `persona-ready` with stories
+- [x] MODULES provisional draft
 - [ ] Architecture locked in [DECISIONS.md](./DECISIONS.md) **after** D0 stories
-- [ ] RULES step: `stack-contracts.mdc` present and pointing at DECISIONS
-- [ ] [REQUIREMENTS.md](./REQUIREMENTS.md) checklist largely complete for D0
-- [ ] CLIENT inbox process understood (optional evidence)
+- [x] RULES step: `stack-contracts.mdc` present and pointing at DECISIONS
+- [x] [REQUIREMENTS.md](./REQUIREMENTS.md) checklist largely complete for D0
+- [x] CLIENT inbox process understood (optional evidence)
 
 ## D1 acceptance
 
 - [ ] Remaining golden-path journeys named and at least `persona-ready`
 - [ ] Boundary / packaging decisions drafted if the product has Core vs optional modules
 
+D1 titles already named as `draft` in FLOWS (J4 profiles, J5 Wayland, J6 multi-monitor). Expand after D0 lock.
+
 ## P0 spine hints (generic)
 
-- [ ] `.cursor/brain/` present and linked from rules (includes DISCOVERY + ARCHITECTURE_DEFAULTS + REQUIREMENTS)
+- [x] `.cursor/brain/` present and linked from rules (includes DISCOVERY + ARCHITECTURE_DEFAULTS + REQUIREMENTS)
 - [ ] Runnable empty app or repo skeleton (no invented domain CRUD)
 - [ ] Auth/shell only if multi-user model is locked
+
+Auth model is locked (host-local logins). Skeleton waits on architecture lock + first `build-ready` journey (or explicit waiver).
 
 ## Build rule
 
 Do not schedule “build all modules.” Schedule **journeys**. Module roadmaps are depth hints only after journeys lock.
+
+Suggested build order after gates: **J0 → J1 → J2 → J3**.

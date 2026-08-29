@@ -7,55 +7,74 @@
 
 | ID | Decision | Locked? |
 |----|----------|---------|
-| P1 | North star — see [PRODUCT.md](./PRODUCT.md) | No |
-| P2 | Devices day one | No |
-| P2b | Deploy / distribution target | No |
-| P3 | User model (solo / team / multi-tenant) | No |
-| P4 | Offline / sync requirements | No |
-| P5 | Out of scope for v1 | No |
+| P1 | North star — small team remote view+control of Ubuntu hosts from macOS/Ubuntu, including reconnect — [PRODUCT.md](./PRODUCT.md) | **Yes** (Q1 + CLIENT ingest 2026-08-30) |
+| P2 | Devices day one: desktop client macOS + Ubuntu; server Ubuntu only. No browser/mobile | **Yes** |
+| P2b | Deploy: desktop installers + self-hosted server on the Ubuntu host; LAN/VPN IP:port; no public web, stores, or relay | **Yes** |
+| P3 | User model: small team, one org; host operator vs viewer; authenticated = full control | **Yes** |
+| P4 | Offline: not required; always-online to host | **Yes** |
+| P5 | Out of scope for v1 — file transfer, audio, clipboard, mobile/web, Mac host, relay, Wayland, multi-monitor, view-only, saved profiles, multi-viewer | **Yes** |
 
 ## Deploy lock
 
 | Field | Value |
 |-------|--------|
-| Primary deploy target | _TBD — Q2_ |
-| Secondary (later) | — |
-| Locked by / date | — |
+| Primary deploy target | Desktop installers (macOS `.app` client; Ubuntu `.deb`/AppImage client + server) plus self-hosted server on the Ubuntu host |
+| Secondary (later) | Optional relay / “connect from anywhere”; App Store not planned |
+| Locked by / date | Discovery Q2 from CLIENT context — 2026-08-30 |
 
 ## NFR locks
 
 | Area | Locked choice | Locked? |
 |------|---------------|---------|
-| Scale / expected users | — | No |
-| Security / privacy | — | No |
-| Availability / backup | — | No |
-| Accessibility / languages | — | No |
-| Compliance | — | No |
-| Builder constraints | — | No |
+| Scale / expected users | Small team; one active session per host | Yes |
+| Security / privacy | TLS all traffic; no plaintext passwords; challenge-response; hashed host credentials | Yes |
+| Availability / backup | Server survives client disconnect; reconnect without restart | Yes |
+| Accessibility / languages | English first | Yes |
+| Compliance | None | Yes |
+| Builder constraints | Fast screen path in C++; hobby time/cost; no paid cloud relay | Yes |
 
 Detail tables may live in [PRODUCT.md](./PRODUCT.md); this section is the lock summary.
 
 ## Architecture (locked after DISCOVERY ARCH step — after D0 stories)
 
-**Profile:** _none yet — see ARCHITECTURE_DEFAULTS.md_
+**Profile:** Native C++ peer desktop (not web/SaaS profiles 3–4; not Tauri local-app profile 1)
 
 | Layer | Choice |
 |-------|--------|
-| Client | — |
-| API | — |
-| Data | — |
-| Auth | — |
-| Sync / jobs | — |
-| Concrete starter | — |
+| Client | C++17/20 + Qt6 desktop app (macOS + Ubuntu): connection UI, decode, render, widget input, coordinate mapping |
+| API | No HTTP API. Custom TLS TCP session: control channel (handshake, auth, keepalive, errors) + length-prefixed data frames (video, mouse, key, ping). Protobuf schemas shared by both binaries |
+| Data | Host file for salted credential hashes only. No Postgres/cloud DB. No session store beyond the running server process |
+| Auth | Host-local usernames; Argon2id hashes; TLS (OpenSSL); challenge-response (nonce + HMAC). Authenticated = full control |
+| Sync / jobs | N/A. In-process threads: server capture → encode → net; client net → decode → Qt render. Input sent on its own path |
+| Concrete starter | CMake + vcpkg or Conan; FFmpeg libavcodec (x264 + VAAPI when present); Asio; X11 XShm/XDamage + XTest (v1); installers `.app` / `.deb` or AppImage |
 
 ```mermaid
 flowchart LR
-  Todo[Await_D0_stories_then_ARCH]
+  subgraph viewer [Viewer_Mac_or_Ubuntu]
+    QtUI[Qt6_UI]
+    Decode[FFmpeg_decode]
+    QtUI --> Decode
+  end
+  subgraph host [Ubuntu_host]
+    Capture[X11_capture]
+    Encode[FFmpeg_encode]
+    Inject[XTest_inject]
+    Creds[Argon2_hashes_on_disk]
+    Capture --> Encode
+  end
+  QtUI -->|"TLS_TCP_control_and_input"| Creds
+  Encode -->|"TLS_TCP_video"| Decode
+  QtUI -->|"mouse_key"| Inject
 ```
 
-**Why this fits (cite user model, deploy, NFRs, D0 journeys):** —  
-**Locked by:** —  
+**Why this fits:** Small team, desktop installers, self-hosted host (P2/P2b). C++ speed NFR for capture/encode (PRODUCT). J0–J3 are a peer session, not CRUD over REST — a Postgres/web profile would ignore deploy and the media path. Qt6 keeps UI in-process with decode (no Electron IPC). X11-only matches v1 scope (C1).  
+**Tradeoff:** Two native binaries and Linux display APIs instead of a faster-to-scaffold Tauri/web app. Wayland stays D1.  
+**Lock?** Awaiting human yes / one tweak.
+
+**Locked by:** — (proposed 2026-08-30 from D0 stories + CLIENT context)  
 **Date:** —
+
+Rejected default from ARCHITECTURE_DEFAULTS (“Desktop + installers → Tauri + SQLite”): that profile assumes local-only CRUD, not a real-time screen protocol or a C++ capture pipeline.
 
 ## Boundaries (ownership)
 
@@ -63,8 +82,9 @@ Who is system of record / UI owner. Fill as MODULES and journeys clarify.
 
 | ID | Decision | Locked? |
 |----|----------|---------|
-| B1 | _e.g. Module X owns entity Y_ | No |
-| B2 | _e.g. No fake CRUD for disabled features — status only_ | No |
+| B1 | Server owns credentials, session occupancy, capture, encode, input inject | Yes (provisional MODULES) |
+| B2 | Client owns connection UI, decode, render, local input capture, coordinate mapping | Yes (provisional MODULES) |
+| B3 | No fake CRUD for out-of-scope features (files, audio, clipboard, relay, Wayland, multi-monitor) | Yes |
 
 ## Journey / process locks
 
@@ -81,7 +101,11 @@ Who is system of record / UI owner. Fill as MODULES and journeys clarify.
 
 | Topic | Default until revisited |
 |-------|-------------------------|
-| — | — |
+| Second client while one session is live | Reject with a clear error (do not silently steal the session) |
+| Host display | Capture the primary X11 screen only |
+| Wayland host | Fail startup/connect with “X11 required for v1” |
+| Client saved passwords | Optional later (J4); v1 may leave password field empty after quit |
+| Codec | Low-latency H.264 (detail at ARCH) |
 
 ## Open questions (blocking)
 
@@ -93,4 +117,9 @@ Who is system of record / UI owner. Fill as MODULES and journeys clarify.
 
 | Option | Why rejected |
 |--------|----------------|
-| — | — |
+| Browser/Electron-only product | Desktop native clients; C++ media path; no web deploy |
+| Cloud relay / TeamViewer-style anywhere | Explicitly out of scope unless requested |
+| Wayland + multi-monitor in v1 | Q1 chose reconnect slice, not the bigger v1 |
+| Mac as host | Server is Ubuntu only |
+| File transfer / audio / clipboard in v1 | Not in purpose |
+| Tauri/Electron + SQLite desktop default | Ignores C++ capture NFR and peer TLS session (J0–J3) |

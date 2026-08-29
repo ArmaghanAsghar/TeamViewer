@@ -6,8 +6,10 @@ alwaysApply: true
 # Stack contracts
 
 ## While architecture unlocked
-If `.cursor/brain/DECISIONS.md` architecture Profile is `none yet`, do not invent
-a stack here — run discovery (`DISCOVERY.md`) and lock DECISIONS first.
+If `.cursor/brain/DECISIONS.md` architecture is not human-locked, do not invent
+a stack here. A **proposal** may already live in DECISIONS §Architecture
+(native C++ peer desktop). Follow that proposal only after the human locks it;
+until then, no feature scaffolding of capture/protocol/UI.
 
 ## After architecture lock
 Follow the locked Client / API / Data / Auth / Sync choices in DECISIONS.md.
