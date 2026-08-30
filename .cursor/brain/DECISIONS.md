@@ -42,48 +42,45 @@ Detail tables may live in [PRODUCT.md](./PRODUCT.md); this section is the lock s
 | Layer | Choice |
 |-------|--------|
 | Client | C++17/20 + Qt6 desktop app (macOS + Ubuntu), Qt Widgets (not QML): connection UI, decode, render, widget input, coordinate mapping |
-| API | No HTTP API. Custom TLS TCP session: control channel (handshake, auth, keepalive, errors) + length-prefixed data frames (video, mouse, key, ping). **Production schema:** Protobuf. **Demo slice in this repo:** packed big-endian structs in `shared/` |
+| API | No HTTP API. Custom TLS TCP session: control channel (handshake, auth, keepalive, errors) + length-prefixed data frames. **Protobuf** schemas shared by both binaries |
 | Data | Host file for salted Argon2id hashes only. No Postgres/cloud DB. No session store beyond the running server process |
 | Auth | Host-local usernames; Argon2id hashes; TLS 1.2+ (OpenSSL); challenge-response (nonce + HMAC-SHA256 over the password hash). Authenticated = full control |
 | Sync / jobs | N/A. In-process threads: server capture → encode → net; client net → decode → Qt render. Input sent on its own path |
-| Concrete starter | **Production lock:** CMake + vcpkg/Conan; FFmpeg libavcodec (x264 + VAAPI when present); X11 XShm/XDamage + XTest; installers `.app` / `.deb` or AppImage. **Demo slice (shipped):** JPEG frames, packed structs, XGetImage, self-signed TLS — see table below |
+| Concrete starter | CMake + **vcpkg or Conan**; FFmpeg libavcodec (**x264** + VAAPI when present); X11 XShm/XDamage + XTest; installers `.app` / `.deb` or AppImage |
 
 ```mermaid
 flowchart LR
   subgraph viewer [Viewer_Mac_or_Ubuntu]
-    QtUI[Qt6_UI]
-    Decode[JPEG_decode]
+    QtUI[Qt6_Widgets]
+    Decode[FFmpeg_H264]
     QtUI --> Decode
   end
   subgraph host [Ubuntu_host]
-    Capture[X11_or_synthetic]
-    Encode[JPEG_encode]
+    Capture[X11_XShm_XDamage]
+    Encode[FFmpeg_x264]
     Inject[XTest_inject]
     Creds[Argon2_hashes_on_disk]
     Capture --> Encode
   end
-  QtUI -->|"TLS_TCP_control_and_input"| Creds
-  Encode -->|"TLS_TCP_video"| Decode
+  QtUI -->|"TLS_Protobuf_control_input"| Creds
+  Encode -->|"TLS_H264"| Decode
   QtUI -->|"mouse_key"| Inject
 ```
 
-**Why this fits:** Small team, desktop installers, self-hosted host (P2/P2b). C++ speed NFR for capture/encode (PRODUCT). J0–J3 are a peer session, not CRUD over REST — a Postgres/web profile would ignore deploy and the media path. Qt6 keeps UI in-process with decode (no Electron IPC). X11-only matches v1 scope (C1).  
-**Tradeoff:** Two native binaries and Linux display APIs instead of a faster-to-scaffold Tauri/web app. Wayland stays D1. Demo slice uses JPEG + packed frames so J0–J3 can run now; H.264/Protobuf stays the production increment (not a silent swap).  
-**Lock?** Locked as proposed — no profile change.
+**Why this fits:** Small team, desktop installers, self-hosted host (P2/P2b). C++ speed NFR for capture/encode (PRODUCT). J0–J3 are a peer session, not CRUD over REST. Qt6 keeps UI in-process with decode. X11-only matches v1 (C1).  
+**Tradeoff:** Two native binaries and Linux display APIs instead of Tauri/web. Wayland stays D1.  
+**Lock?** **This PRD stack is the lock.** Compact card: [CONTEXT.md](./CONTEXT.md).
 
-**Locked by:** Armaghan Asghar (architecture lock) + builder demo request (demo-slice shortcuts)  
+**Locked by:** Armaghan Asghar  
 **Date:** 2026-08-30
+
+**Planning snapshot:** production build **has not started**. Existing JPEG / packed-struct trees are a throwaway demo — do not extend them as if they were the starter.
 
 Rejected default from ARCHITECTURE_DEFAULTS (“Desktop + installers → Tauri + SQLite”): that profile assumes local-only CRUD, not a real-time screen protocol or a C++ capture pipeline.
 
-### Demo-slice shortcuts (honest, not silent)
+### Not the lock (throwaway demo)
 
-| Production plan | Demo slice (this repo) | Why |
-|-----------------|------------------------|-----|
-| H.264 via FFmpeg (x264 / VAAPI) | Motion JPEG frames | Enough to prove view/control/reconnect; fewer moving parts |
-| Protobuf schemas | Packed big-endian structs in `shared/` | Same frame header contract; schema file comes next |
-| Packaged `.app` / `.deb` | CMake binaries + `scripts/run_demo.sh` | Demo is run-from-source |
-| Public CA / pinned certs | Self-signed cert on first server start; client does not verify the CA | LAN demo; UI states this |
+JPEG frames, packed structs, `scripts/run_demo.sh`, self-signed verify-none. Keep only as a senior-demo artifact. Next B1 work uses the production table above.
 
 ## Boundaries (ownership)
 
@@ -104,19 +101,20 @@ Rejected default from ARCHITECTURE_DEFAULTS (“Desktop + installers → Tauri +
 | G4 | Journey statuses: `draft` → `persona-ready` → `client-validated` → `build-ready` |
 | G5 | MODULES stays provisional until boundary lock or dedicated boundary journey |
 | G6 | Requirements-first: D0 stories before stack proposal (B-S9), unless human asks early |
-| G7 | 2026-08-30 demo request = architecture lock + J0–J3 waiver to `build-ready` for the demo slice |
+| G7 | 2026-08-30: J0–J3 `build-ready`. Production stack lock is the PRD table (H.264, Protobuf, vcpkg/Conan, installers) — not the JPEG demo |
+| G8 | Planning snapshot: production build has not started |
 
 ## Locked defaults (was: open until revisited)
 
-Locked by Armaghan Asghar, 2026-08-30 — same pass as the architecture lock. Demo-slice notes added when the J0–J3 binaries landed.
+Locked by Armaghan Asghar, 2026-08-30 — same pass as the architecture lock.
 
 | Topic | Decision | Locked? |
 |-------|----------|---------|
 | Second client while one session is live | Reject with a clear error (do not silently steal the session) | Yes |
-| Host display | Capture the primary X11 screen only; `--synthetic` is an explicit test/demo canvas, not a silent fake | Yes |
-| Wayland host | Fail startup/connect with “X11 required for v1” unless `--synthetic` | Yes |
+| Host display | Capture the primary X11 screen only | Yes |
+| Wayland host | Fail startup/connect with “X11 required for v1” | Yes |
 | Client saved passwords | Optional later (J4); v1 may leave password field empty after quit | Yes |
-| Codec | Production: low-latency H.264. Demo slice in this repo: JPEG | Yes |
+| Codec | Low-latency H.264 (FFmpeg) | Yes |
 
 ## Open questions (blocking)
 

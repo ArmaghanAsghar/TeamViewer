@@ -113,6 +113,4 @@ flowchart LR
 
 ## Tech summary
 
-**Locked** (2026-08-30): native C++ peer desktop — Qt6 Widgets clients, C++ Ubuntu server, TLS TCP session, X11 capture. Production codec is FFmpeg H.264; the shipped demo slice encodes **JPEG**. Full table in [DECISIONS.md](./DECISIONS.md) §Architecture.
-
-Shipped name: **PeerDesk**.
+**Locked** (2026-08-30): native C++ peer desktop — Qt6 Widgets, TLS + **Protobuf**, **FFmpeg H.264**, CMake + **vcpkg/Conan**, desktop **installers**. Compact card: [CONTEXT.md](./CONTEXT.md). Production build has not started.

@@ -118,6 +118,6 @@ flowchart TD
 
 ## Current status
 
-- Architecture: **locked** 2026-08-30 ([DECISIONS.md](.cursor/brain/DECISIONS.md))
-- Journeys J0–J3: `build-ready` ([FLOWS.md](.cursor/brain/FLOWS.md))
-- Demo slice is in `client/`, `server/`, `shared/` (JPEG + packed frames). Production increment remains FFmpeg H.264 + Protobuf as drawn above.
+- Architecture: **locked** — FFmpeg H.264, Protobuf, vcpkg/Conan, installers ([CONTEXT.md](.cursor/brain/CONTEXT.md))
+- Journeys J0–J3: `build-ready`
+- Planning snapshot: **production build has not started**. JPEG/packed-struct trees are a throwaway demo, not the starter.

@@ -36,7 +36,7 @@ Agent acts as **requirements engineer**: complete groups top-to-bottom; propose 
 - [x] Architecture profile + concrete starter locked **after** D0 stories — DECISIONS §Architecture
 - [x] RULES / stack-contracts step done
 
-Stack is **locked** in DECISIONS (native C++ peer desktop, Qt Widgets, XTest inject) — 2026-08-30. Demo-slice codec/schema shortcuts are recorded there (not silent).
+Stack is **locked** in DECISIONS / [CONTEXT.md](./CONTEXT.md): FFmpeg H.264, Protobuf, vcpkg/Conan, installers. JPEG demo is not the lock.
 
 ## Evidence (optional)
 
@@ -47,4 +47,4 @@ C1 (Wayland in v1) and C2 (reconnect as D0) resolved. J0–J3 are `build-ready` 
 
 ## Still missing
 
-None for D0 — architecture locked, J0–J3 `build-ready`, personas confirmed. D1 (J4–J6) remains `draft`, unblocked but not started. Non-blocking: confirm PeerDesk as the lasting name; schedule H.264/Protobuf as the first post-demo increment.
+None for D0. Production B1 has not started. D1 (J4–J6) remains `draft`.
