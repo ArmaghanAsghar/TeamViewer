@@ -61,5 +61,6 @@ flowchart TB
 
 ## Open questions
 
-- Qt Widgets vs QML — decided at architecture lock, not here
-- XTest vs uinput on X11 — implementation detail inside Input inject
+- Qt Widgets vs QML — **Widgets** (locked with architecture)
+- XTest vs uinput on X11 — XTest for the demo slice
+- JPEG vs H.264 — JPEG for demo; H.264 is the production increment

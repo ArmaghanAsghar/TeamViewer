@@ -113,4 +113,6 @@ flowchart LR
 
 ## Tech summary
 
-Proposed (not human-locked): native C++ peer desktop — Qt6 clients, C++ Ubuntu server, TLS TCP session, FFmpeg, X11 capture. Full table in [DECISIONS.md](./DECISIONS.md) §Architecture.
+**Locked** (2026-08-30): native C++ peer desktop — Qt6 Widgets clients, C++ Ubuntu server, TLS TCP session, X11 capture. Demo slice encodes **JPEG** frames (production increment is FFmpeg H.264). Full table in [DECISIONS.md](./DECISIONS.md) §Architecture.
+
+Shipped name: **PeerDesk**.

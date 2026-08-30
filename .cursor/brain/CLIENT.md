@@ -18,7 +18,7 @@ flowchart LR
 |-------|--------|
 | Source / client | Builder notes: [README.md](../../README.md), [remote-desktop-app-context.md](../../remote-desktop-app-context.md), discovery Q1 (2026-08-30) |
 | Profile / product slice assumed | Small-team LAN/VPN remote desktop; mouse+keyboard; no relay |
-| Last ingest | 2026-08-30 — context handoff + Q1 |
+| Last ingest | 2026-08-30 — senior-demo request (lock + J0–J3 waiver) |
 | Open conflicts | 0 remaining (C1–C2 resolved by Q1) |
 
 **How to paste:** Drop messy bullets under **Raw inbox**, then ask an agent to “ingest CLIENT.md.”
@@ -29,7 +29,7 @@ flowchart LR
 
 <!-- Paste new notes below this line. Do not edit structured sections until ingest. -->
 
-_(empty — ingested 2026-08-30)_
+_(empty — ingested 2026-08-30; demo request ingested same day)_
 
 ---
 
@@ -53,6 +53,7 @@ Source files ingested in full as evidence (not copied verbatim here): `README.md
 | E5 | Direct IP:port; NAT/relay out of scope unless requested | context §Open questions | Deploy = self-hosted host + LAN/VPN reachability |
 | E6 | v1 is for a small team sharing Ubuntu hosts | Q1 2026-08-30 | User model = small team, not solo, not multi-tenant SaaS |
 | E7 | “Working” = connect, see screen, mouse/keyboard, then disconnect and reconnect without restarting the server | Q1 2026-08-30 | J3 is D0, not a later nice-to-have |
+| E8 | Run discovery, finalize requirements, then make a demo for a senior software engineer | Builder 2026-08-30 | Architecture lock + J0–J3 waiver; ship PeerDesk demo slice |
 
 ### J0 — Host prepares the server
 

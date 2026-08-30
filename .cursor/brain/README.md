@@ -52,4 +52,4 @@ Agent plans / architecture / multi-step proposals lead with **1–3 Mermaid diag
 
 ## Current phase
 
-See [PHASES.md](./PHASES.md). D0 journeys J0–J3 are `persona-ready` with stories. Architecture is **proposed** in [DECISIONS.md](./DECISIONS.md) (awaiting human lock). Feature code waits on `build-ready`.
+See [PHASES.md](./PHASES.md). D0 journeys J0–J3 are `build-ready`. Architecture is **locked** in [DECISIONS.md](./DECISIONS.md). Demo slice lives in `client/`, `server/`, `shared/`.

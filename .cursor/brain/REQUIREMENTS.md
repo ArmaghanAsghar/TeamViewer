@@ -33,22 +33,18 @@ Agent acts as **requirements engineer**: complete groups top-to-bottom; propose 
 
 ## Stack locked
 
-- [ ] Architecture profile + concrete starter locked **after** D0 stories — DECISIONS §Architecture
+- [x] Architecture profile + concrete starter locked **after** D0 stories — DECISIONS §Architecture
 - [x] RULES / stack-contracts step done
 
-Stack is **proposed** in DECISIONS (native C++ peer desktop). Human lock still required.
+Locked 2026-08-30: native C++ peer desktop. Demo-slice codec/schema shortcuts are recorded in DECISIONS (not silent).
 
 ## Evidence (optional)
 
 - [x] CLIENT inbox process understood — [CLIENT.md](./CLIENT.md)
 - [x] Open conflicts resolved or parked
 
-C1 (Wayland in v1) and C2 (reconnect as D0) resolved. Journeys are `persona-ready`; human still marks `client-validated` / `build-ready`.
+C1 (Wayland in v1) and C2 (reconnect as D0) resolved. J0–J3 are `build-ready` via solo validation + demo waiver.
 
 ## Still missing
 
-_List gaps that block `build-ready` or stack lock:_
-
-- Human lock (or one tweak) of DECISIONS §Architecture
-- Human walkthrough: mark J0–J3 `client-validated`, then `build-ready` when ready to code
-- Persona name/role corrections if Sam / Riley / Jordan hats are wrong
+_None blocking D0._ Remaining product questions (non-blocking): confirm PeerDesk as the lasting name; schedule H.264/Protobuf as the first post-demo increment.

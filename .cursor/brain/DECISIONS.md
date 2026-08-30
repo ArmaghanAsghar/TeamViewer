@@ -1,7 +1,6 @@
 # Decisions (locked)
 
-> Nothing below is locked until discovery writes it. Agent proposes; human locks.  
-> Stack lock happens **after** D0 stories (DISCOVERY Step ARCH), unless human asked early.
+> Agent proposes; human locks. Stack lock happens **after** D0 stories (DISCOVERY Step ARCH), unless human asked early.
 
 ## Product locks
 
@@ -13,6 +12,7 @@
 | P3 | User model: small team, one org; host operator vs viewer; authenticated = full control | **Yes** |
 | P4 | Offline: not required; always-online to host | **Yes** |
 | P5 | Out of scope for v1 — file transfer, audio, clipboard, mobile/web, Mac host, relay, Wayland, multi-monitor, view-only, saved profiles, multi-viewer | **Yes** |
+| P6 | Product name for binaries/UI: **PeerDesk** (repo nickname “TeamViewer” is not the shipped name) | **Yes** (demo lock 2026-08-30) |
 
 ## Deploy lock
 
@@ -41,23 +41,23 @@ Detail tables may live in [PRODUCT.md](./PRODUCT.md); this section is the lock s
 
 | Layer | Choice |
 |-------|--------|
-| Client | C++17/20 + Qt6 desktop app (macOS + Ubuntu): connection UI, decode, render, widget input, coordinate mapping |
-| API | No HTTP API. Custom TLS TCP session: control channel (handshake, auth, keepalive, errors) + length-prefixed data frames (video, mouse, key, ping). Protobuf schemas shared by both binaries |
-| Data | Host file for salted credential hashes only. No Postgres/cloud DB. No session store beyond the running server process |
-| Auth | Host-local usernames; Argon2id hashes; TLS (OpenSSL); challenge-response (nonce + HMAC). Authenticated = full control |
+| Client | C++17/20 + Qt6 Widgets desktop app (macOS + Ubuntu): connection UI, decode, render, widget input, coordinate mapping |
+| API | No HTTP API. Custom TLS TCP session: control + length-prefixed data frames (video, mouse, key, ping). Shared C++ types in `shared/` (Protobuf remains the production schema plan; demo uses packed structs) |
+| Data | Host file for salted Argon2id hashes only. No Postgres/cloud DB. No session store beyond the running server process |
+| Auth | Host-local usernames; Argon2id hashes; TLS 1.2+ (OpenSSL); challenge-response (nonce + HMAC-SHA256 over the password hash). Authenticated = full control |
 | Sync / jobs | N/A. In-process threads: server capture → encode → net; client net → decode → Qt render. Input sent on its own path |
-| Concrete starter | CMake + vcpkg or Conan; FFmpeg libavcodec (x264 + VAAPI when present); Asio; X11 XShm/XDamage + XTest (v1); installers `.app` / `.deb` or AppImage |
+| Concrete starter | CMake; JPEG frames for the **demo slice**; FFmpeg/x264 remains the production codec; X11 XGetImage + XTest (v1); self-signed TLS with an explicit client warning |
 
 ```mermaid
 flowchart LR
   subgraph viewer [Viewer_Mac_or_Ubuntu]
     QtUI[Qt6_UI]
-    Decode[FFmpeg_decode]
+    Decode[JPEG_decode]
     QtUI --> Decode
   end
   subgraph host [Ubuntu_host]
-    Capture[X11_capture]
-    Encode[FFmpeg_encode]
+    Capture[X11_or_synthetic]
+    Encode[JPEG_encode]
     Inject[XTest_inject]
     Creds[Argon2_hashes_on_disk]
     Capture --> Encode
@@ -68,23 +68,31 @@ flowchart LR
 ```
 
 **Why this fits:** Small team, desktop installers, self-hosted host (P2/P2b). C++ speed NFR for capture/encode (PRODUCT). J0–J3 are a peer session, not CRUD over REST — a Postgres/web profile would ignore deploy and the media path. Qt6 keeps UI in-process with decode (no Electron IPC). X11-only matches v1 scope (C1).  
-**Tradeoff:** Two native binaries and Linux display APIs instead of a faster-to-scaffold Tauri/web app. Wayland stays D1.  
-**Lock?** Awaiting human yes / one tweak.
+**Tradeoff:** Two native binaries and Linux display APIs instead of a faster-to-scaffold Tauri/web app. Wayland stays D1. Demo slice uses JPEG + packed frames so a senior can run J0–J3 in one sitting; H.264/Protobuf is the next increment, not a silent swap.  
+**Lock?** Locked.
 
-**Locked by:** — (proposed 2026-08-30 from D0 stories + CLIENT context)  
-**Date:** —
+**Locked by:** Builder request to finalize requirements and ship a senior-reviewable demo (2026-08-30)  
+**Date:** 2026-08-30
 
 Rejected default from ARCHITECTURE_DEFAULTS (“Desktop + installers → Tauri + SQLite”): that profile assumes local-only CRUD, not a real-time screen protocol or a C++ capture pipeline.
 
-## Boundaries (ownership)
+### Demo-slice shortcuts (honest, not silent)
 
-Who is system of record / UI owner. Fill as MODULES and journeys clarify.
+| Production plan | Demo slice (this repo) | Why |
+|-----------------|------------------------|-----|
+| H.264 via FFmpeg (x264 / VAAPI) | Motion JPEG frames | Enough to prove view/control/reconnect; fewer moving parts |
+| Protobuf schemas | Packed big-endian structs in `shared/` | Same frame header contract; schema file comes next |
+| Packaged `.app` / `.deb` | CMake binaries + `scripts/run_demo.sh` | Demo is run-from-source |
+| Public CA / pinned certs | Self-signed cert on first server start; client does not verify the CA | LAN demo; UI states this |
+
+## Boundaries (ownership)
 
 | ID | Decision | Locked? |
 |----|----------|---------|
-| B1 | Server owns credentials, session occupancy, capture, encode, input inject | Yes (provisional MODULES) |
-| B2 | Client owns connection UI, decode, render, local input capture, coordinate mapping | Yes (provisional MODULES) |
+| B1 | Server owns credentials, session occupancy, capture, encode, input inject | Yes |
+| B2 | Client owns connection UI, decode, render, local input capture, coordinate mapping | Yes |
 | B3 | No fake CRUD for out-of-scope features (files, audio, clipboard, relay, Wayland, multi-monitor) | Yes |
+| B4 | `shared/` owns wire types, TLS helpers, Argon2/HMAC, coordinate mapping | Yes |
 
 ## Journey / process locks
 
@@ -96,16 +104,17 @@ Who is system of record / UI owner. Fill as MODULES and journeys clarify.
 | G4 | Journey statuses: `draft` → `persona-ready` → `client-validated` → `build-ready` |
 | G5 | MODULES stays provisional until boundary lock or dedicated boundary journey |
 | G6 | Requirements-first: D0 stories before stack proposal (B-S9), unless human asks early |
+| G7 | 2026-08-30 demo request = architecture lock + J0–J3 waiver to `build-ready` for the demo slice |
 
 ## Open but non-blocking defaults
 
 | Topic | Default until revisited |
 |-------|-------------------------|
 | Second client while one session is live | Reject with a clear error (do not silently steal the session) |
-| Host display | Capture the primary X11 screen only |
-| Wayland host | Fail startup/connect with “X11 required for v1” |
+| Host display | Capture the primary X11 screen only; `--synthetic` draws a host canvas for tests |
+| Wayland host | Fail startup with “X11 required for v1” unless `--synthetic` |
 | Client saved passwords | Optional later (J4); v1 may leave password field empty after quit |
-| Codec | Low-latency H.264 (detail at ARCH) |
+| Codec | Demo = JPEG; production increment = low-latency H.264 |
 
 ## Open questions (blocking)
 

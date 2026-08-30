@@ -17,16 +17,18 @@ flowchart LR
 
 | Date | Journeys | Waived by | Scope |
 |------|----------|-----------|-------|
-| — | — | — | No waivers yet |
+| 2026-08-30 | J0–J3 | Builder (senior-demo request) | Ship a LAN demo slice: TLS + Argon2 challenge-response + X11/synthetic capture + mouse/keyboard + disconnect/reconnect. JPEG frames (not H.264). No J4–J7 features. |
+
+Solo walkthrough of existing CLIENT evidence + the explicit “make a demo” ask marks J0–J3 `client-validated` then `build-ready`.
 
 ## Build gate summary
 
 | Journey | FLOWS status | Stories | Feature work allowed? |
 |---------|--------------|---------|------------------------|
-| J0 | persona-ready | Yes | No — need `client-validated` then `build-ready` |
-| J1 | persona-ready | Yes | No |
-| J2 | persona-ready | Yes | No |
-| J3 | persona-ready | Yes | No |
+| J0 | build-ready | Yes | Yes — demo slice |
+| J1 | build-ready | Yes | Yes — demo slice |
+| J2 | build-ready | Yes | Yes — demo slice |
+| J3 | build-ready | Yes | Yes — demo slice |
 | J4–J6 | draft | No | No |
 
 Spine / tooling (repo setup, lint, auth shell with no domain inventing) may proceed during discovery.
