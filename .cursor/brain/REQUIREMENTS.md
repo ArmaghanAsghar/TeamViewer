@@ -47,4 +47,4 @@ C1 (Wayland in v1) and C2 (reconnect as D0) resolved. J0–J3 are `build-ready` 
 
 ## Still missing
 
-None for D0. Production B1 has not started. D1 (J4–J6) remains `draft`.
+None for D0. Production B1 has not started. D1 (J4–J6) remains `draft`. Current paths vs B1 target: [CODEMAP.md](./CODEMAP.md).

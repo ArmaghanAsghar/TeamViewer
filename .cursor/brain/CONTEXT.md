@@ -20,6 +20,6 @@ flowchart LR
 | Build | **CMake + vcpkg or Conan** |
 | Ship | macOS `.app` client; Ubuntu `.deb`/AppImage client+server |
 
-**Planning snapshot:** production **build has not started**. Treat `client/` `server/` `shared/` JPEG + packed-struct binaries as a throwaway senior demo — **not** the locked starter. Next feature work implements this table, not JPEG.
+**Planning snapshot (2026-08-30):** production **build has not started**. Treat `client/` `server/` `shared/` JPEG + packed-struct binaries as a throwaway senior demo — **not** the locked starter. Next B1 work implements this table, not JPEG.
 
-J0–J3 = `build-ready`. Detail: [DECISIONS.md](./DECISIONS.md), [PROJECT_DESIGN.md](../../PROJECT_DESIGN.md).
+J0–J3 = `build-ready`. Paths: [CODEMAP.md](./CODEMAP.md). Detail: [DECISIONS.md](./DECISIONS.md), [PROJECT_DESIGN.md](../../PROJECT_DESIGN.md).

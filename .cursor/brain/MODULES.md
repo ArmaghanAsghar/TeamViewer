@@ -1,7 +1,6 @@
 # Modules
 
-> **Provisional** until boundary decisions lock in [DECISIONS.md](./DECISIONS.md) or a dedicated boundary journey is `client-validated`.  
-> Draft after D0 FLOWS; refine when architecture is locked.
+> Boundaries **locked** 2026-08-30 ([DECISIONS.md](./DECISIONS.md) B1–B4). Optional packs stay D1.
 
 ```mermaid
 flowchart TB

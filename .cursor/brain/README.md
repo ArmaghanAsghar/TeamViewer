@@ -53,4 +53,4 @@ Agent plans / architecture / multi-step proposals lead with **1–3 Mermaid diag
 
 ## Current phase
 
-See [CONTEXT.md](./CONTEXT.md) (compact lock). D0 J0–J3 `build-ready`. Production stack locked; production build has not started.
+See [CONTEXT.md](./CONTEXT.md) (compact lock). D0 J0–J3 `build-ready`. Production stack locked (H.264, Protobuf, vcpkg/Conan, installers). JPEG tree is a throwaway demo. Production B1 has not started — see [CODEMAP.md](./CODEMAP.md).

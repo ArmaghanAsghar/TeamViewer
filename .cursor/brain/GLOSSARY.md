@@ -32,6 +32,8 @@
 | Challenge-response | Server sends a nonce; client proves it knows the password without sending the password | See auth NFR |
 | Reconnect | Client drops, then connects again; server still running | D0 / J3 — not “saved profiles” |
 | Saved profile | Remembered IP/user/port in the client UI | D1 — not the same as reconnect |
+| PeerDesk | Shipped product name | Repo folder may still say TeamViewer |
+| Synthetic capture | Server paints a test canvas instead of X11 | Explicit `--synthetic`; demo only |
 | Relay / rendezvous | Extra cloud server so you can connect through NAT | Out of scope for v1 |
 | X11 | Older Linux desktop session type | v1 capture/inject target |
 | Wayland | Newer Linux desktop session type | D1 — different capture APIs |
