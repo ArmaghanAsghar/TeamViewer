@@ -63,3 +63,4 @@ flowchart TB
 
 - UI toolkit: **Qt Widgets** (not QML) — see [DECISIONS.md](./DECISIONS.md) §Architecture
 - Input inject on X11 (v1): **XTest** — uinput stays a D1/Wayland (J5) question, not reopened here
+- Codec / schema / deps: **H.264 + Protobuf + vcpkg/Conan** (CONTEXT lock). JPEG demo is not the module contract.

@@ -14,10 +14,10 @@ flowchart LR
 
 | Phase | Deliver | Status |
 |-------|---------|--------|
-| **P0** | Brain + rules; empty app shell / tooling as needed | Brain present; no app skeleton yet |
-| **D0** | RE intake + PERSONAS + first **2–4** journeys `persona-ready` + stories → **then** architecture lock | **Complete** — architecture locked 2026-08-30; J0–J3 `build-ready` |
-| **D1** | Remaining golden-path journeys to `persona-ready` | Unblocked — J4–J6 remain `draft`, not yet started |
-| **B1** | Feature work per `build-ready` journey | Open for J0–J3; D1 journeys still gate their own B1 work |
+| **P0** | Brain + rules; empty app shell / tooling as needed | Brain + rules done. Production spine **not** started (JPEG tree is throwaway) |
+| **D0** | RE intake + PERSONAS + first **2–4** journeys `persona-ready` + stories → **then** architecture lock | **Complete** — PRD stack locked 2026-08-30; J0–J3 `build-ready` |
+| **D1** | Remaining golden-path journeys to `persona-ready` | Unblocked — J4–J6 remain `draft` |
+| **B1** | Feature work per `build-ready` journey | **Not started** on the locked stack (H.264 / Protobuf / vcpkg / installers) |
 
 Journey statuses: `draft` → `persona-ready` → `client-validated` → `build-ready` (solo may self-mark `client-validated`).
 
@@ -42,10 +42,10 @@ D1 titles already named as `draft` in FLOWS (J4 profiles, J5 Wayland, J6 multi-m
 ## P0 spine hints (generic)
 
 - [x] `.cursor/brain/` present and linked from rules (includes DISCOVERY + ARCHITECTURE_DEFAULTS + REQUIREMENTS)
-- [ ] Runnable empty app or repo skeleton (no invented domain CRUD)
-- [ ] Auth/shell only if multi-user model is locked
+- [ ] Production app skeleton (vcpkg/Conan, Protobuf, FFmpeg) — not the JPEG demo
+- [x] Auth/shell only if multi-user model is locked
 
-Auth model is locked (host-local logins). Both gates are now clear (architecture locked; J0 is `build-ready`) — skeleton/feature work may begin; the checkboxes above stay unchecked until that work actually happens.
+Auth model is locked. Planning snapshot: **production build has not started.** JPEG demo is not the P0 spine.
 
 ## Build rule
 

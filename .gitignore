@@ -1,3 +1,6 @@
+.peerdesk/
+.peerdesk-demo/
+
 # Prerequisites
 *.d
 

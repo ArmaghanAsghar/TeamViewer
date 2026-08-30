@@ -9,6 +9,7 @@ Agents act as the project’s **requirements engineer**: interview first, write 
 
 | File | Purpose |
 |------|---------|
+| [CONTEXT.md](./CONTEXT.md) | Compact lock + planning snapshot |
 | [DISCOVERY.md](../DISCOVERY.md) | RE interview playbook |
 | [ARCHITECTURE_DEFAULTS.md](../ARCHITECTURE_DEFAULTS.md) | Stack profiles (after stories) |
 | [REQUIREMENTS.md](./REQUIREMENTS.md) | Completeness checklist (index) |
@@ -52,4 +53,4 @@ Agent plans / architecture / multi-step proposals lead with **1–3 Mermaid diag
 
 ## Current phase
 
-See [PHASES.md](./PHASES.md). D0 journeys J0–J3 are `build-ready` (2026-08-30). Architecture is **locked** in [DECISIONS.md](./DECISIONS.md). Feature code for J0–J3 may begin.
+See [CONTEXT.md](./CONTEXT.md) (compact lock). D0 J0–J3 `build-ready`. Production stack locked; production build has not started.

@@ -113,4 +113,4 @@ flowchart LR
 
 ## Tech summary
 
-Locked 2026-08-30: native C++ peer desktop — Qt6 (Widgets) clients, C++ Ubuntu server, TLS TCP session, FFmpeg, X11 capture. Full table in [DECISIONS.md](./DECISIONS.md) §Architecture.
+**Locked** (2026-08-30): native C++ peer desktop — Qt6 Widgets, TLS + **Protobuf**, **FFmpeg H.264**, CMake + **vcpkg/Conan**, desktop **installers**. Compact card: [CONTEXT.md](./CONTEXT.md). Production build has not started.
