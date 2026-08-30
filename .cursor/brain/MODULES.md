@@ -59,8 +59,8 @@ flowchart TB
 - Client owns form, decode, paint, widget-scoped input, coordinate mapping
 - Do not ship file/audio/clipboard APIs in v1
 
-## Open questions
+## Resolved at architecture lock (2026-08-30)
 
-- Qt Widgets vs QML — **Widgets** (locked with architecture)
-- XTest vs uinput on X11 — XTest for the demo slice
-- JPEG vs H.264 — JPEG for demo; H.264 is the production increment
+- UI toolkit: **Qt Widgets** (not QML) — see [DECISIONS.md](./DECISIONS.md) §Architecture
+- Input inject on X11 (v1): **XTest** — uinput stays a D1/Wayland (J5) question, not reopened here
+- Codec: JPEG for the demo slice; H.264 is the production increment

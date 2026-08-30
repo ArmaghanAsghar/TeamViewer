@@ -55,7 +55,7 @@ A teammate types IP, username, password, and port; sees the remote Ubuntu screen
 | Team keeps paying for or fighting commercial remote-desktop tools for simple LAN/VPN control | Viewers + operators | High |
 | Dropped session means walking to the machine or restarting a flaky host agent | Viewers | High (explicit in Q1) |
 | Slow or laggy screen/control if capture is naive | Viewers | Medium |
-| Host is Ubuntu-only in this product; Mac-as-host is not solved | Operators on Mac | Deferred (out of scope) |
+| Host is Ubuntu-only in this product; Mac-as-host is not solved | Operators on Mac | Rejected — see DECISIONS §Rejected options |
 
 ## Current workaround
 
@@ -113,6 +113,6 @@ flowchart LR
 
 ## Tech summary
 
-**Locked** (2026-08-30): native C++ peer desktop — Qt6 Widgets clients, C++ Ubuntu server, TLS TCP session, X11 capture. Demo slice encodes **JPEG** frames (production increment is FFmpeg H.264). Full table in [DECISIONS.md](./DECISIONS.md) §Architecture.
+**Locked** (2026-08-30): native C++ peer desktop — Qt6 Widgets clients, C++ Ubuntu server, TLS TCP session, X11 capture. Production codec is FFmpeg H.264; the shipped demo slice encodes **JPEG**. Full table in [DECISIONS.md](./DECISIONS.md) §Architecture.
 
 Shipped name: **PeerDesk**.

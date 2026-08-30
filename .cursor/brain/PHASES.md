@@ -15,9 +15,9 @@ flowchart LR
 | Phase | Deliver | Status |
 |-------|---------|--------|
 | **P0** | Brain + rules; empty app shell / tooling as needed | **Done** — CMake spine + `client/` `server/` `shared/` |
-| **D0** | RE intake + PERSONAS + first **2–4** journeys `persona-ready` + stories → **then** architecture lock | **Done** — architecture locked 2026-08-30; J0–J3 `build-ready` |
-| **D1** | Remaining golden-path journeys to `persona-ready` | Titles named (J4–J6); expand after demo review |
-| **B1** | Feature work per `build-ready` journey | **In progress** — PeerDesk demo slice (J0–J3) |
+| **D0** | RE intake + PERSONAS + first **2–4** journeys `persona-ready` + stories → **then** architecture lock | **Complete** — architecture locked 2026-08-30; J0–J3 `build-ready` |
+| **D1** | Remaining golden-path journeys to `persona-ready` | Unblocked — J4–J6 remain `draft`, not yet started |
+| **B1** | Feature work per `build-ready` journey | **In progress** — PeerDesk demo slice (J0–J3); D1 still gates its own work |
 
 Journey statuses: `draft` → `persona-ready` → `client-validated` → `build-ready` (solo may self-mark `client-validated`).
 
@@ -27,7 +27,7 @@ Journey statuses: `draft` → `persona-ready` → `client-validated` → `build-
 - [x] PERSONAS drafted with role cards
 - [x] First 2–4 journeys `persona-ready` with stories
 - [x] MODULES provisional draft
-- [x] Architecture locked in [DECISIONS.md](./DECISIONS.md) **after** D0 stories
+- [x] Architecture locked in [DECISIONS.md](./DECISIONS.md) **after** D0 stories (2026-08-30)
 - [x] RULES step: `stack-contracts.mdc` present and pointing at DECISIONS
 - [x] [REQUIREMENTS.md](./REQUIREMENTS.md) checklist largely complete for D0
 - [x] CLIENT inbox process understood (optional evidence)
@@ -45,7 +45,7 @@ D1 titles already named as `draft` in FLOWS (J4 profiles, J5 Wayland, J6 multi-m
 - [x] Runnable app skeleton (`peerdesk-server`, `peerdesk-client`, `peerdesk-smoke`)
 - [x] Auth/shell only if multi-user model is locked
 
-Auth model is locked (host-local logins). Demo waiver logged in STORIES.md.
+Auth model is locked (host-local logins). Demo waiver logged in STORIES.md. Gates were cleared 2026-08-30; the PeerDesk demo slice is the first B1 work.
 
 ## Build rule
 

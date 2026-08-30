@@ -72,4 +72,4 @@ Every persona needs the sections below (LoomLogic-style contract).
 
 Persona defaults are **fiction** until [CLIENT.md](./CLIENT.md) evidence or solo walkthrough marks journeys `client-validated`. Conflicts override these cards when resolved.
 
-Correct names/roles if these hats are wrong. v1 has **no view-only** persona.
+Names and roles confirmed by Armaghan Asghar, 2026-08-30 — Sam/Riley/Jordan and the viewer/host-operator split stand as-is. v1 has **no view-only** persona.

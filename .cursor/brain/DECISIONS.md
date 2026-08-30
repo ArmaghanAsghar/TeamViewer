@@ -41,12 +41,12 @@ Detail tables may live in [PRODUCT.md](./PRODUCT.md); this section is the lock s
 
 | Layer | Choice |
 |-------|--------|
-| Client | C++17/20 + Qt6 Widgets desktop app (macOS + Ubuntu): connection UI, decode, render, widget input, coordinate mapping |
-| API | No HTTP API. Custom TLS TCP session: control + length-prefixed data frames (video, mouse, key, ping). Shared C++ types in `shared/` (Protobuf remains the production schema plan; demo uses packed structs) |
+| Client | C++17/20 + Qt6 desktop app (macOS + Ubuntu), Qt Widgets (not QML): connection UI, decode, render, widget input, coordinate mapping |
+| API | No HTTP API. Custom TLS TCP session: control channel (handshake, auth, keepalive, errors) + length-prefixed data frames (video, mouse, key, ping). **Production schema:** Protobuf. **Demo slice in this repo:** packed big-endian structs in `shared/` |
 | Data | Host file for salted Argon2id hashes only. No Postgres/cloud DB. No session store beyond the running server process |
 | Auth | Host-local usernames; Argon2id hashes; TLS 1.2+ (OpenSSL); challenge-response (nonce + HMAC-SHA256 over the password hash). Authenticated = full control |
 | Sync / jobs | N/A. In-process threads: server capture → encode → net; client net → decode → Qt render. Input sent on its own path |
-| Concrete starter | CMake; JPEG frames for the **demo slice**; FFmpeg/x264 remains the production codec; X11 XGetImage + XTest (v1); self-signed TLS with an explicit client warning |
+| Concrete starter | **Production lock:** CMake + vcpkg/Conan; FFmpeg libavcodec (x264 + VAAPI when present); X11 XShm/XDamage + XTest; installers `.app` / `.deb` or AppImage. **Demo slice (shipped):** JPEG frames, packed structs, XGetImage, self-signed TLS — see table below |
 
 ```mermaid
 flowchart LR
@@ -68,10 +68,10 @@ flowchart LR
 ```
 
 **Why this fits:** Small team, desktop installers, self-hosted host (P2/P2b). C++ speed NFR for capture/encode (PRODUCT). J0–J3 are a peer session, not CRUD over REST — a Postgres/web profile would ignore deploy and the media path. Qt6 keeps UI in-process with decode (no Electron IPC). X11-only matches v1 scope (C1).  
-**Tradeoff:** Two native binaries and Linux display APIs instead of a faster-to-scaffold Tauri/web app. Wayland stays D1. Demo slice uses JPEG + packed frames so a senior can run J0–J3 in one sitting; H.264/Protobuf is the next increment, not a silent swap.  
-**Lock?** Locked.
+**Tradeoff:** Two native binaries and Linux display APIs instead of a faster-to-scaffold Tauri/web app. Wayland stays D1. Demo slice uses JPEG + packed frames so J0–J3 can run now; H.264/Protobuf stays the production increment (not a silent swap).  
+**Lock?** Locked as proposed — no profile change.
 
-**Locked by:** Builder request to finalize requirements and ship a senior-reviewable demo (2026-08-30)  
+**Locked by:** Armaghan Asghar (architecture lock) + builder demo request (demo-slice shortcuts)  
 **Date:** 2026-08-30
 
 Rejected default from ARCHITECTURE_DEFAULTS (“Desktop + installers → Tauri + SQLite”): that profile assumes local-only CRUD, not a real-time screen protocol or a C++ capture pipeline.
@@ -106,21 +106,25 @@ Rejected default from ARCHITECTURE_DEFAULTS (“Desktop + installers → Tauri +
 | G6 | Requirements-first: D0 stories before stack proposal (B-S9), unless human asks early |
 | G7 | 2026-08-30 demo request = architecture lock + J0–J3 waiver to `build-ready` for the demo slice |
 
-## Open but non-blocking defaults
+## Locked defaults (was: open until revisited)
 
-| Topic | Default until revisited |
-|-------|-------------------------|
-| Second client while one session is live | Reject with a clear error (do not silently steal the session) |
-| Host display | Capture the primary X11 screen only; `--synthetic` draws a host canvas for tests |
-| Wayland host | Fail startup with “X11 required for v1” unless `--synthetic` |
-| Client saved passwords | Optional later (J4); v1 may leave password field empty after quit |
-| Codec | Demo = JPEG; production increment = low-latency H.264 |
+Locked by Armaghan Asghar, 2026-08-30 — same pass as the architecture lock. Demo-slice notes added when the J0–J3 binaries landed.
+
+| Topic | Decision | Locked? |
+|-------|----------|---------|
+| Second client while one session is live | Reject with a clear error (do not silently steal the session) | Yes |
+| Host display | Capture the primary X11 screen only; `--synthetic` is an explicit test/demo canvas, not a silent fake | Yes |
+| Wayland host | Fail startup/connect with “X11 required for v1” unless `--synthetic` | Yes |
+| Client saved passwords | Optional later (J4); v1 may leave password field empty after quit | Yes |
+| Codec | Production: low-latency H.264. Demo slice in this repo: JPEG | Yes |
 
 ## Open questions (blocking)
 
 | ID | Question | Blocking? |
 |----|----------|-----------|
 | — | — | — |
+
+None currently — architecture lock, J0–J3 build-ready promotion, and persona confirmation (the three items previously tracked here) were all resolved 2026-08-30.
 
 ## Rejected options (so we don’t re-litigate)
 
