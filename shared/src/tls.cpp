@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
 
@@ -60,7 +61,10 @@ SSL_CTX* new_client_ctx() {
 
 }  // namespace
 
-void tls_library_init() { OPENSSL_init_ssl(0, nullptr); }
+void tls_library_init() {
+    OPENSSL_init_ssl(0, nullptr);
+    std::signal(SIGPIPE, SIG_IGN);
+}
 
 bool ensure_self_signed_cert(const std::filesystem::path& key, const std::filesystem::path& crt) {
     if (std::filesystem::exists(key) && std::filesystem::exists(crt)) return true;
@@ -93,8 +97,10 @@ TlsConn::~TlsConn() { close(); }
 
 void TlsConn::close() {
     if (ssl_) {
-        SSL_shutdown(static_cast<SSL*>(ssl_));
-        SSL_free(static_cast<SSL*>(ssl_));
+        auto* ssl = static_cast<SSL*>(ssl_);
+        SSL_set_quiet_shutdown(ssl, 1);
+        SSL_shutdown(ssl);
+        SSL_free(ssl);
         ssl_ = nullptr;
     }
     if (owns_ctx_ && ctx_) {

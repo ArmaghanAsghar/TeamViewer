@@ -6,6 +6,7 @@
 #include <QtCore/QObject>
 #include <QtGui/QImage>
 
+#include <atomic>
 #include <mutex>
 #include <queue>
 
@@ -18,6 +19,7 @@ public:
 
 public slots:
     void connectToHost(QString host, quint16 port, QString username, QString password);
+    // Thread-safe: may be called from the UI thread while pump() is blocked in recv.
     void enqueueMouse(quint8 action, quint8 button, quint16 x, quint16 y, qint16 wheel);
     void enqueueKey(quint8 down, quint32 keysym);
     void disconnectSession();
@@ -38,7 +40,7 @@ private:
     std::mutex mu_;
     std::queue<MouseEvent> mice_;
     std::queue<KeyEvent> keys_;
-    bool stop_ = false;
+    std::atomic<bool> stop_{false};
 };
 
 }  // namespace peerdesk

@@ -193,13 +193,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     connect(worker_, &SessionWorker::sessionEnded, this, [this](const QString& s) { showForm(s, false); });
 
     connect(video_, &VideoSurface::mappedMouse, worker_, &SessionWorker::enqueueMouse,
-            Qt::QueuedConnection);
+            Qt::DirectConnection);
     connect(video_, &VideoSurface::mappedKey, worker_, &SessionWorker::enqueueKey,
-            Qt::QueuedConnection);
+            Qt::DirectConnection);
 }
 
 MainWindow::~MainWindow() {
-    QMetaObject::invokeMethod(worker_, "disconnectSession", Qt::QueuedConnection);
+    worker_->disconnectSession();
     thread_->quit();
     thread_->wait(3000);
     delete worker_;
@@ -220,7 +220,7 @@ void MainWindow::onConnect() {
 }
 
 void MainWindow::onDisconnect() {
-    QMetaObject::invokeMethod(worker_, "disconnectSession", Qt::QueuedConnection);
+    worker_->disconnectSession();
 }
 
 void MainWindow::showSession(int w, int h) {

@@ -7,6 +7,7 @@
 #include "peerdesk/tls.hpp"
 
 #include <chrono>
+#include <csignal>
 #include <cstdlib>
 #include <unistd.h>
 #include <filesystem>
@@ -180,10 +181,8 @@ void test_session() {
     expect(again.has_value(), "reconnect tls");
     expect(again && client_hello_auth(*again, "jordan", "peerdesk", t, payload), "reconnect auth");
     expect(t == peerdesk::MsgType::AuthOk, "reconnect without restarting server");
-    if (again) again->close();
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
     server.request_stop();
+    if (again) again->close();
     th.join();
     std::filesystem::remove_all(dir);
 }
@@ -191,6 +190,7 @@ void test_session() {
 }  // namespace
 
 int main() {
+    std::signal(SIGPIPE, SIG_IGN);
     test_map();
     test_protocol();
     test_auth();
