@@ -59,7 +59,7 @@ flowchart TB
 - Client owns form, decode, paint, widget-scoped input, coordinate mapping
 - Do not ship file/audio/clipboard APIs in v1
 
-## Open questions
+## Resolved at architecture lock (2026-08-30)
 
-- Qt Widgets vs QML — decided at architecture lock, not here
-- XTest vs uinput on X11 — implementation detail inside Input inject
+- UI toolkit: **Qt Widgets** (not QML) — see [DECISIONS.md](./DECISIONS.md) §Architecture
+- Input inject on X11 (v1): **XTest** — uinput stays a D1/Wayland (J5) question, not reopened here

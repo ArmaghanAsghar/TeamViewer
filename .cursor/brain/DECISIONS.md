@@ -41,7 +41,7 @@ Detail tables may live in [PRODUCT.md](./PRODUCT.md); this section is the lock s
 
 | Layer | Choice |
 |-------|--------|
-| Client | C++17/20 + Qt6 desktop app (macOS + Ubuntu): connection UI, decode, render, widget input, coordinate mapping |
+| Client | C++17/20 + Qt6 desktop app (macOS + Ubuntu), Qt Widgets (not QML): connection UI, decode, render, widget input, coordinate mapping |
 | API | No HTTP API. Custom TLS TCP session: control channel (handshake, auth, keepalive, errors) + length-prefixed data frames (video, mouse, key, ping). Protobuf schemas shared by both binaries |
 | Data | Host file for salted credential hashes only. No Postgres/cloud DB. No session store beyond the running server process |
 | Auth | Host-local usernames; Argon2id hashes; TLS (OpenSSL); challenge-response (nonce + HMAC). Authenticated = full control |
@@ -69,10 +69,10 @@ flowchart LR
 
 **Why this fits:** Small team, desktop installers, self-hosted host (P2/P2b). C++ speed NFR for capture/encode (PRODUCT). J0–J3 are a peer session, not CRUD over REST — a Postgres/web profile would ignore deploy and the media path. Qt6 keeps UI in-process with decode (no Electron IPC). X11-only matches v1 scope (C1).  
 **Tradeoff:** Two native binaries and Linux display APIs instead of a faster-to-scaffold Tauri/web app. Wayland stays D1.  
-**Lock?** Awaiting human yes / one tweak.
+**Lock?** Locked as proposed — no changes.
 
-**Locked by:** — (proposed 2026-08-30 from D0 stories + CLIENT context)  
-**Date:** —
+**Locked by:** Armaghan Asghar  
+**Date:** 2026-08-30
 
 Rejected default from ARCHITECTURE_DEFAULTS (“Desktop + installers → Tauri + SQLite”): that profile assumes local-only CRUD, not a real-time screen protocol or a C++ capture pipeline.
 
@@ -97,21 +97,25 @@ Who is system of record / UI owner. Fill as MODULES and journeys clarify.
 | G5 | MODULES stays provisional until boundary lock or dedicated boundary journey |
 | G6 | Requirements-first: D0 stories before stack proposal (B-S9), unless human asks early |
 
-## Open but non-blocking defaults
+## Locked defaults (was: open until revisited)
 
-| Topic | Default until revisited |
-|-------|-------------------------|
-| Second client while one session is live | Reject with a clear error (do not silently steal the session) |
-| Host display | Capture the primary X11 screen only |
-| Wayland host | Fail startup/connect with “X11 required for v1” |
-| Client saved passwords | Optional later (J4); v1 may leave password field empty after quit |
-| Codec | Low-latency H.264 (detail at ARCH) |
+Locked by Armaghan Asghar, 2026-08-30 — same pass as the architecture lock.
+
+| Topic | Decision | Locked? |
+|-------|----------|---------|
+| Second client while one session is live | Reject with a clear error (do not silently steal the session) | Yes |
+| Host display | Capture the primary X11 screen only | Yes |
+| Wayland host | Fail startup/connect with “X11 required for v1” | Yes |
+| Client saved passwords | Optional later (J4); v1 may leave password field empty after quit | Yes |
+| Codec | Low-latency H.264 (detail at ARCH) | Yes |
 
 ## Open questions (blocking)
 
 | ID | Question | Blocking? |
 |----|----------|-----------|
 | — | — | — |
+
+None currently — architecture lock, J0–J3 build-ready promotion, and persona confirmation (the three items previously tracked here) were all resolved 2026-08-30.
 
 ## Rejected options (so we don’t re-litigate)
 

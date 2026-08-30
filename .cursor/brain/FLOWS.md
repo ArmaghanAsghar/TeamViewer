@@ -17,10 +17,10 @@ flowchart LR
 
 | ID | Title | Status | Primary personas | Wave |
 |----|-------|--------|------------------|------|
-| J0 | Host prepares the Ubuntu server | persona-ready | P3 | D0 |
-| J1 | Viewer connects and authenticates | persona-ready | P1, P2 | D0 |
-| J2 | View remote screen and control mouse/keyboard | persona-ready | P1, P2 | D0 |
-| J3 | Disconnect and reconnect without restarting the server | persona-ready | P1, P2, P3 | D0 |
+| J0 | Host prepares the Ubuntu server | build-ready | P3 | D0 |
+| J1 | Viewer connects and authenticates | build-ready | P1, P2 | D0 |
+| J2 | View remote screen and control mouse/keyboard | build-ready | P1, P2 | D0 |
+| J3 | Disconnect and reconnect without restarting the server | build-ready | P1, P2, P3 | D0 |
 | J4 | Saved connection profiles | draft | P1, P2 | D1 |
 | J5 | Wayland host capture and inject | draft | P3 | D1 |
 | J6 | Multi-monitor host | draft | P1, P3 | D1 |
@@ -30,7 +30,7 @@ flowchart LR
 
 ## J0 — Host prepares the Ubuntu server
 
-**Status:** persona-ready  
+**Status:** build-ready  
 **Goal:** Jordan can install or run the server on an X11 Ubuntu session so it listens on a port with at least one login, and the team can reach that IP:port on the LAN/VPN.
 
 ```mermaid
@@ -63,7 +63,7 @@ stateDiagram-v2
 
 ## J1 — Viewer connects and authenticates
 
-**Status:** persona-ready  
+**Status:** build-ready  
 **Goal:** Sam or Riley enter IP, port, username, and password and either get an authenticated session or a clear refusal.
 
 ```mermaid
@@ -102,7 +102,7 @@ stateDiagram-v2
 
 ## J2 — View remote screen and control mouse/keyboard
 
-**Status:** persona-ready  
+**Status:** build-ready  
 **Goal:** After auth, the client shows the host desktop and the viewer’s mouse and keyboard drive that desktop. Clicks land on the right host pixels even when the window size differs.
 
 ```mermaid
@@ -137,7 +137,7 @@ stateDiagram-v2
 
 ## J3 — Disconnect and reconnect without restarting the server
 
-**Status:** persona-ready  
+**Status:** build-ready  
 **Goal:** Viewer closes or loses the client; the server keeps listening; the same or another teammate can authenticate again and resume view/control without Jordan restarting the process.
 
 ```mermaid

@@ -4,13 +4,13 @@ Single source of truth for **product scope, journeys, modules, phases, and locke
 
 Agents act as the project’s **requirements engineer**: interview first, write here, draft stories, then recommend stack. Do not invent feature CRUD early.
 
-**Discovery:** If incomplete, follow [DISCOVERY.md](./DISCOVERY.md). Track completeness in [REQUIREMENTS.md](./REQUIREMENTS.md).  
+**Discovery:** If incomplete, follow [DISCOVERY.md](../DISCOVERY.md). Track completeness in [REQUIREMENTS.md](./REQUIREMENTS.md).  
 **Example snippets:** kit `examples/solo-habit-tracker.md`.
 
 | File | Purpose |
 |------|---------|
-| [DISCOVERY.md](./DISCOVERY.md) | RE interview playbook |
-| [ARCHITECTURE_DEFAULTS.md](./ARCHITECTURE_DEFAULTS.md) | Stack profiles (after stories) |
+| [DISCOVERY.md](../DISCOVERY.md) | RE interview playbook |
+| [ARCHITECTURE_DEFAULTS.md](../ARCHITECTURE_DEFAULTS.md) | Stack profiles (after stories) |
 | [REQUIREMENTS.md](./REQUIREMENTS.md) | Completeness checklist (index) |
 | [PRODUCT.md](./PRODUCT.md) | North star, devices, deploy, pains, NFRs |
 | [PERSONAS.md](./PERSONAS.md) | Role cards |
@@ -52,4 +52,4 @@ Agent plans / architecture / multi-step proposals lead with **1–3 Mermaid diag
 
 ## Current phase
 
-See [PHASES.md](./PHASES.md). D0 journeys J0–J3 are `persona-ready` with stories. Architecture is **proposed** in [DECISIONS.md](./DECISIONS.md) (awaiting human lock). Feature code waits on `build-ready`.
+See [PHASES.md](./PHASES.md). D0 journeys J0–J3 are `build-ready` (2026-08-30). Architecture is **locked** in [DECISIONS.md](./DECISIONS.md). Feature code for J0–J3 may begin.

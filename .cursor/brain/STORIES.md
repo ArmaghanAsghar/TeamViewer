@@ -23,10 +23,10 @@ flowchart LR
 
 | Journey | FLOWS status | Stories | Feature work allowed? |
 |---------|--------------|---------|------------------------|
-| J0 | persona-ready | Yes | No — need `client-validated` then `build-ready` |
-| J1 | persona-ready | Yes | No |
-| J2 | persona-ready | Yes | No |
-| J3 | persona-ready | Yes | No |
+| J0 | build-ready | Yes | Yes |
+| J1 | build-ready | Yes | Yes |
+| J2 | build-ready | Yes | Yes |
+| J3 | build-ready | Yes | Yes |
 | J4–J6 | draft | No | No |
 
 Spine / tooling (repo setup, lint, auth shell with no domain inventing) may proceed during discovery.
