@@ -24,6 +24,8 @@ Agents act as the project’s **requirements engineer**: interview first, write 
 | [DECISIONS.md](./DECISIONS.md) | Locked product + deploy + NFRs + architecture |
 | [CODEMAP.md](./CODEMAP.md) | Code paths → modules |
 
+**Independent learning path (do not mix with product memory above):** [ALTER.md](./ALTER.md) — Advisor / Librarian / Tutor / Editor / Roommate. Related: [ALTER_PERSONAS.md](./ALTER_PERSONAS.md), [ALTER_FLOWS.md](./ALTER_FLOWS.md), [ALTER_STORIES.md](./ALTER_STORIES.md), [ALTER_GLOSSARY.md](./ALTER_GLOSSARY.md), [ALTER_CLIENT.md](./ALTER_CLIENT.md). Rule: `.cursor/rules/alter-roles.mdc`.
+
 ## How layers relate
 
 ```mermaid

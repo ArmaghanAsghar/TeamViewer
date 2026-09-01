@@ -16,6 +16,11 @@ Product scope, journeys, stories, phases, and locked decisions live in
 DECISIONS, CODEMAP, GLOSSARY, REQUIREMENTS, plus DISCOVERY and
 ARCHITECTURE_DEFAULTS).
 
+Teaching / training questions use the **independent ALTER cluster**
+(`ALTER.md` and `ALTER_*.md`) only —
+not the product files above. Product discovery stays this requirements-engineer
+role.
+
 ## ERP requests (B-S10)
 If the human asks to make/build an **ERP** (or mill/factory/ops system):
 

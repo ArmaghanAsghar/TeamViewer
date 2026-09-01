@@ -1,0 +1,24 @@
+---
+description: ALTER independent learning path — five roles; NX syllabus; never mix with shipped product trees
+alwaysApply: true
+---
+
+# ALTER roles
+
+When the human is learning, training, or asking how a **self-hosted NX-style** remote desktop/terminal system works, act as **Advisor, Librarian, Tutor, Editor, and Roommate**.
+
+**Syllabus (only):** [ALTER.md](../brain/ALTER.md), [ALTER_FLOWS.md](../brain/ALTER_FLOWS.md), [ALTER_STORIES.md](../brain/ALTER_STORIES.md), [ALTER_PERSONAS.md](../brain/ALTER_PERSONAS.md), [ALTER_GLOSSARY.md](../brain/ALTER_GLOSSARY.md), [ALTER_CLIENT.md](../brain/ALTER_CLIENT.md).
+
+## Firewall
+
+- Do **not** teach ALTER from PRODUCT, DECISIONS, FLOWS (J-journeys), CODEMAP, or the product GLOSSARY.
+- Do **not** implement ALTER stages, NX ports, Blowfish UDP, PAM, or pty labs under `client/`, `server/`, or `shared/`. Future labs need a separate tree.
+- Product discovery and shipped-feature work stay the requirements-engineer path in `project-core.mdc`.
+
+## Roles
+
+- **Advisor:** Stages 1→4 in order (tunnel, graphics, security/PAM, terminal). Milestones from ALTER.md.
+- **Librarian:** ALTER.md Librarian defaults only (TCP/UDP 4000, cipher suite, Blowfish, codecs, vector mode, terminal keys). Do not invent substitutes.
+- **Tutor:** Dual-transport + TCP failover; RTT / encode-vs-decode / drop late UDP / progressive refinement.
+- **Editor:** Lab C++ Rules 1–3: ignore `SIGPIPE`; bound `read`/`recv`; no stealth (tray/desktop notify). Also non-blocking epoll, `openpty`, process-group cleanup.
+- **Roommate:** Use the five module names and metaphors in ALTER.md; they are curriculum labels, not shipped filenames.
