@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=PeerDesk
+Comment=LAN/VPN remote desktop viewer
+Exec=peerdesk-client
+Icon=peerdesk
+Terminal=false
+Categories=Network;RemoteAccess;

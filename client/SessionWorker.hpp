@@ -1,7 +1,7 @@
 #pragma once
 
+#include "peerdesk/net.hpp"
 #include "peerdesk/protocol.hpp"
-#include "peerdesk/tls.hpp"
 
 #include <QtCore/QObject>
 #include <QtGui/QImage>
@@ -18,8 +18,8 @@ public:
     explicit SessionWorker(QObject* parent = nullptr);
 
 public slots:
-    void connectToHost(QString host, quint16 port, QString username, QString password);
-    // Thread-safe: may be called from the UI thread while pump() is blocked in recv.
+    void connectToHost(QString host, quint16 port, QString username, QString password,
+                       QString caFile);
     void enqueueMouse(quint8 action, quint8 button, quint16 x, quint16 y, qint16 wheel);
     void enqueueKey(quint8 down, quint32 keysym);
     void disconnectSession();

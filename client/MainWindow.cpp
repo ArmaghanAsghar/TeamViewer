@@ -118,7 +118,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     auto* subtitle = new QLabel("LAN / VPN remote desktop — view, mouse, keyboard, reconnect.");
     subtitle->setStyleSheet("color: #9aa6bc;");
 
-    auto* note = new QLabel("TLS is on (self-signed demo cert). Password is never sent in plaintext.");
+    auto* note = new QLabel(
+        "TLS verifies the host certificate. Set PEERDESK_CA_FILE to the host’s server.crt "
+        "(printed when the server starts). Password is never sent in plaintext.");
     note->setStyleSheet("color: #7f93b0;");
     note->setWordWrap(true);
 
@@ -181,6 +183,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     worker_ = new SessionWorker;
     worker_->moveToThread(thread_);
     thread_->start();
+    ca_file_ = QString::fromUtf8(qgetenv("PEERDESK_CA_FILE"));
 
     connect(worker_, &SessionWorker::statusChanged, this, [this](const QString& s) {
         form_status_->setText(s);
@@ -216,7 +219,8 @@ void MainWindow::onConnect() {
     }
     QMetaObject::invokeMethod(worker_, "connectToHost", Qt::QueuedConnection,
                               Q_ARG(QString, ip_->text().trimmed()), Q_ARG(quint16, port),
-                              Q_ARG(QString, user_->text().trimmed()), Q_ARG(QString, pass_->text()));
+                              Q_ARG(QString, user_->text().trimmed()), Q_ARG(QString, pass_->text()),
+                              Q_ARG(QString, ca_file_));
 }
 
 void MainWindow::onDisconnect() {

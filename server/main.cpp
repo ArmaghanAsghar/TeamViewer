@@ -1,5 +1,7 @@
 #include "host_server.hpp"
 
+#include "peerdesk/cert.hpp"
+
 #include <csignal>
 #include <iostream>
 
@@ -42,10 +44,10 @@ int main(int argc, char** argv) {
                 "peerdesk-server — Ubuntu host for PeerDesk (J0)\n"
                 "  --port N          listen port (default 4473)\n"
                 "  --bind ADDR       default 0.0.0.0\n"
-                "  --data-dir PATH   hashes + self-signed TLS material\n"
+                "  --data-dir PATH   hashes + TLS cert/key\n"
                 "  --user NAME       create this login if the store is empty (default jordan)\n"
                 "  --password STR    password for that login (default peerdesk)\n"
-                "  --synthetic       draw a host canvas instead of X11 (tests / Wayland)\n"
+                "  --synthetic       draw a host canvas instead of X11 (tests / non-X11)\n"
                 "  --no-inject       do not open XTEST\n";
             return 0;
         } else {
@@ -68,8 +70,14 @@ int main(int argc, char** argv) {
               << (cfg.synthetic ? " (synthetic display)" : " (X11 capture)") << "\n";
     std::cout << "peerdesk-server: login '" << cfg.bootstrap_user
               << "' (password hashed on disk, never stored in plaintext)\n";
+    std::string ferr;
+    const auto fp = peerdesk::cert_sha256_fingerprint(server.cert_path(), ferr);
+    if (!fp.empty()) {
+        std::cout << "peerdesk-server: TLS SHA256 fingerprint " << fp << "\n";
+        std::cout << "peerdesk-server: viewers must set PEERDESK_CA_FILE=" << server.cert_path()
+                  << "\n";
+    }
     server.run();
-    std::cout << "peerdesk-server: stopped (still a clean exit; process was not required to die "
-                 "on client disconnect)\n";
+    std::cout << "peerdesk-server: stopped (process stays up across client disconnect; this is a clean exit)\n";
     return 0;
 }

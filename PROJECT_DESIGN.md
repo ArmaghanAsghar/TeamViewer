@@ -118,6 +118,6 @@ flowchart TD
 
 ## Current status
 
-- Architecture: **locked** — FFmpeg H.264, Protobuf, vcpkg/Conan, installers ([CONTEXT.md](.cursor/brain/CONTEXT.md))
+- Architecture: **locked** — FFmpeg H.264, Protobuf, Asio, vcpkg, Qt Widgets, installers ([CONTEXT.md](.cursor/brain/CONTEXT.md))
 - Journeys J0–J3: `build-ready`
-- Planning snapshot: **production build has not started**. JPEG/packed-struct trees are a throwaway demo, not the starter.
+- B1 implements the production tree in [CODEMAP.md](.cursor/brain/CODEMAP.md).

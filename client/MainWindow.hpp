@@ -66,6 +66,7 @@ private:
     QLabel* session_status_ = nullptr;
     QThread* thread_ = nullptr;
     SessionWorker* worker_ = nullptr;
+    QString ca_file_;
 };
 
 }  // namespace peerdesk

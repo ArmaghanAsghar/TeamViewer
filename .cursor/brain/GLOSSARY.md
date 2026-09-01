@@ -27,13 +27,16 @@
 | Data channel | Length-prefixed frames: video, mouse, key, ping | Same TCP/TLS connection, logical split |
 | Capture | Grabbing pixels of the host desktop | X11 path in v1 |
 | Encode / decode | Compress frames (H.264) then unpack on the client | Low-latency presets, not archival quality |
+| Asio | C++ async networking library used for TLS TCP | Locked net layer; standalone Asio + OpenSSL |
+| vcpkg | C++ package manager for CMake | Locked; Conan is not the starter |
+| Protobuf | Schema for control and data messages | Length-prefixed `Envelope` on the wire |
 | Input injection | Making the host OS see fake mouse/keyboard events | As if someone sat at that desk |
 | Coordinate mapping | Scale a click in the client window to host screen pixels | Required when sizes differ |
 | Challenge-response | Server sends a nonce; client proves it knows the password without sending the password | See auth NFR |
 | Reconnect | Client drops, then connects again; server still running | D0 / J3 — not “saved profiles” |
 | Saved profile | Remembered IP/user/port in the client UI | D1 — not the same as reconnect |
 | PeerDesk | Shipped product name | Repo folder may still say TeamViewer |
-| Synthetic capture | Server paints a test canvas instead of X11 | Explicit `--synthetic`; demo only |
+| Synthetic capture | Server paints a test canvas instead of X11 | Explicit `--synthetic`; tests and non-X11 |
 | Relay / rendezvous | Extra cloud server so you can connect through NAT | Out of scope for v1 |
 | X11 | Older Linux desktop session type | v1 capture/inject target |
 | Wayland | Newer Linux desktop session type | D1 — different capture APIs |

@@ -2,8 +2,13 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD="${ROOT}/build"
-if [[ ! -x "${BUILD}/peerdesk-server" || ! -x "${BUILD}/peerdesk-client" ]]; then
-  echo "Build first: cmake -S . -B build && cmake --build build -j"
+CLIENT="${BUILD}/peerdesk-client"
+if [[ -d "${BUILD}/peerdesk-client.app" ]]; then
+  CLIENT="${BUILD}/peerdesk-client.app/Contents/MacOS/peerdesk-client"
+fi
+if [[ ! -x "${BUILD}/peerdesk-server" || ! -x "${CLIENT}" ]]; then
+  echo "Build first: cmake --preset homebrew && cmake --build --preset homebrew -j"
+  echo "  or: ./scripts/bootstrap-vcpkg.sh"
   exit 1
 fi
 DATA="${PEERDESK_DATA:-${ROOT}/.peerdesk-demo}"
@@ -20,6 +25,7 @@ echo "Starting peerdesk-server on port ${PORT} (${MODE})"
 "${BUILD}/peerdesk-server" --port "${PORT}" --data-dir "${DATA}" --user jordan --password peerdesk "${EXTRA[@]}" &
 SID=$!
 trap 'kill "${SID}" 2>/dev/null || true' EXIT
-sleep 0.4
-echo "Starting peerdesk-client (jordan / peerdesk)"
-exec "${BUILD}/peerdesk-client"
+sleep 0.5
+export PEERDESK_CA_FILE="${DATA}/server.crt"
+echo "Starting peerdesk-client (jordan / peerdesk) with PEERDESK_CA_FILE=${PEERDESK_CA_FILE}"
+exec "${CLIENT}" --ca-file "${PEERDESK_CA_FILE}"

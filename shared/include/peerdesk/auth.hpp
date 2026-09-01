@@ -1,7 +1,5 @@
 #pragma once
 
-#include "peerdesk/protocol.hpp"
-
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -14,6 +12,18 @@ namespace peerdesk {
 inline constexpr uint32_t kArgonT = 2;
 inline constexpr uint32_t kArgonM = 16384;
 inline constexpr uint32_t kArgonP = 1;
+
+struct AuthChallenge {
+    std::array<uint8_t, 16> salt{};
+    std::array<uint8_t, 32> nonce{};
+    uint32_t t_cost = kArgonT;
+    uint32_t m_cost = kArgonM;
+    uint32_t parallelism = kArgonP;
+};
+
+struct AuthResponse {
+    std::array<uint8_t, 32> hmac{};
+};
 
 bool random_bytes(std::span<uint8_t> out);
 
@@ -28,5 +38,9 @@ AuthResponse make_auth_response(std::string_view password, const AuthChallenge& 
 
 bool verify_auth_response(std::span<const uint8_t, 32> stored_hash, const AuthChallenge& ch,
                           const AuthResponse& resp);
+
+std::optional<AuthChallenge> challenge_from_bytes(std::span<const uint8_t> salt,
+                                                 std::span<const uint8_t> nonce, uint32_t t,
+                                                 uint32_t m, uint32_t p);
 
 }  // namespace peerdesk

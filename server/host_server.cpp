@@ -1,13 +1,17 @@
 #include "host_server.hpp"
 
 #include "peerdesk/auth.hpp"
-#include "peerdesk/jpeg.hpp"
+#include "peerdesk/cert.hpp"
+#include "peerdesk/codec.hpp"
+#include "peerdesk/protocol.hpp"
 
 #include <algorithm>
 #include <chrono>
-#include <span>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
+#include <mutex>
+#include <span>
 #include <thread>
 
 namespace peerdesk {
@@ -24,6 +28,8 @@ std::string mouse_line(const MouseEvent& e) {
 }  // namespace
 
 HostServer::HostServer(Config cfg) : cfg_(std::move(cfg)) {}
+
+std::filesystem::path HostServer::cert_path() const { return cfg_.data_dir / "server.crt"; }
 
 bool HostServer::setup(std::string& err) {
     if (cfg_.data_dir.empty()) {
@@ -58,7 +64,7 @@ bool HostServer::setup(std::string& err) {
         return s && std::string(s) == "wayland";
     }();
     if (wayland && !cfg_.synthetic) {
-        err = "X11 required for v1 (Wayland host is D1). Use --synthetic for a canvas-only demo.";
+        err = "X11 required for v1 (Wayland host is D1). Use --synthetic for tests.";
         return false;
     }
 
@@ -66,7 +72,6 @@ bool HostServer::setup(std::string& err) {
                       ? std::unique_ptr<ScreenSource>(new SyntheticCapture())
                       : std::unique_ptr<ScreenSource>(new X11Capture());
     if (!source->open(err)) return false;
-    // Probe only; real source is opened per session so X11 stays on the session thread.
     source.reset();
 
     if (cfg_.inject && !cfg_.synthetic) {
@@ -76,10 +81,7 @@ bool HostServer::setup(std::string& err) {
 
     const auto key = cfg_.data_dir / "server.key";
     const auto crt = cfg_.data_dir / "server.crt";
-    if (!ensure_self_signed_cert(key, crt)) {
-        err = "Could not create self-signed TLS certificate";
-        return false;
-    }
+    if (!ensure_self_signed_cert(key, crt, err)) return false;
     if (!listener_.listen_on(cfg_.bind, cfg_.port, crt, key, err)) return false;
     return true;
 }
@@ -103,17 +105,16 @@ void HostServer::run() {
     if (session_th.joinable()) session_th.join();
 }
 
-bool HostServer::handshake(TlsConn& conn, int& width, int& height, std::string& err) {
-    MsgType t{};
-    std::vector<uint8_t> payload;
-    if (!conn.recv(t, payload, 8000) || t != MsgType::Hello) {
+bool HostServer::handshake(TlsConn& conn, std::string& err) {
+    proto::Envelope env;
+    if (!conn.recv(env, 8000) || !env.has_hello()) {
         err = "Expected hello";
-        conn.send(MsgType::AuthFail, pack_auth_fail(AuthFailReason::Protocol));
+        conn.send(env_auth_fail(proto::AUTH_FAIL_PROTOCOL));
         return false;
     }
-    const auto hello = unpack_hello(payload);
-    if (!hello || hello->version != kProtocolVersion || hello->username.empty()) {
-        conn.send(MsgType::AuthFail, pack_auth_fail(AuthFailReason::Protocol));
+    const auto& hello = env.hello();
+    if (hello.version() != kProtocolVersion || hello.username().empty()) {
+        conn.send(env_auth_fail(proto::AUTH_FAIL_PROTOCOL));
         err = "Bad hello";
         return false;
     }
@@ -122,46 +123,48 @@ bool HostServer::handshake(TlsConn& conn, int& width, int& height, std::string& 
     ch.t_cost = kArgonT;
     ch.m_cost = kArgonM;
     ch.parallelism = kArgonP;
-    const auto user = users_.find(hello->username);
+    const auto user = users_.find(hello.username());
     if (user) {
         ch.salt = user->salt;
         ch.t_cost = user->t_cost;
         ch.m_cost = user->m_cost;
         ch.parallelism = user->parallelism;
     } else {
-        // Unknown user: still issue a challenge (no account-oracle). HMAC will fail.
-        const auto fake = hmac_sha256(fake_secret_, std::span<const uint8_t>(
-            reinterpret_cast<const uint8_t*>(hello->username.data()), hello->username.size()));
+        const auto fake = hmac_sha256(
+            fake_secret_, std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(hello.username().data()),
+                                                   hello.username().size()));
         std::copy(fake.begin(), fake.begin() + 16, ch.salt.begin());
     }
     if (!random_bytes(ch.nonce)) {
         err = "RNG failed";
         return false;
     }
-    if (!conn.send(MsgType::AuthChallenge, pack_challenge(ch))) {
+    if (!conn.send(env_challenge(ch.salt, ch.nonce, ch.t_cost, ch.m_cost, ch.parallelism))) {
         err = "Send challenge failed";
         return false;
     }
-    if (!conn.recv(t, payload, 15000) || t != MsgType::AuthResponse) {
+    if (!conn.recv(env, 15000) || !env.has_auth_response()) {
         err = "Expected auth response";
         return false;
     }
-    const auto resp = unpack_auth_response(payload);
-    if (!resp) {
-        conn.send(MsgType::AuthFail, pack_auth_fail(AuthFailReason::Protocol));
+    const auto& pr = env.auth_response().hmac();
+    if (pr.size() != 32) {
+        conn.send(env_auth_fail(proto::AUTH_FAIL_PROTOCOL));
         return false;
     }
+    AuthResponse resp;
+    std::copy(pr.begin(), pr.end(), resp.hmac.begin());
 
-    const bool creds_ok = user && verify_auth_response(user->hash, ch, *resp);
+    const bool creds_ok = user && verify_auth_response(user->hash, ch, resp);
     if (!creds_ok) {
-        conn.send(MsgType::AuthFail, pack_auth_fail(AuthFailReason::BadCredentials));
+        conn.send(env_auth_fail(proto::AUTH_FAIL_BAD_CREDENTIALS));
         err = "Authentication failed";
         return false;
     }
     if (session_active_.exchange(true)) {
-        conn.send(MsgType::AuthFail, pack_auth_fail(AuthFailReason::SessionBusy));
+        conn.send(env_auth_fail(proto::AUTH_FAIL_SESSION_BUSY));
         err = "Host already has a viewer";
-        session_active_ = true;  // keep the live session marked busy
+        session_active_ = true;
         return false;
     }
 
@@ -170,13 +173,11 @@ bool HostServer::handshake(TlsConn& conn, int& width, int& height, std::string& 
                                                : std::unique_ptr<ScreenSource>(new X11Capture());
     if (!source->open(err)) {
         session_active_ = false;
-        conn.send(MsgType::Error, pack_error(err));
+        conn.send(env_error(err));
         return false;
     }
-    width = source->width();
-    height = source->height();
-    if (!conn.send(MsgType::AuthOk, pack_auth_ok(AuthOk{static_cast<uint16_t>(width),
-                                                       static_cast<uint16_t>(height)}))) {
+    if (!conn.send(env_auth_ok(static_cast<uint32_t>(source->width()),
+                               static_cast<uint32_t>(source->height())))) {
         session_active_ = false;
         err = "Send auth-ok failed";
         return false;
@@ -190,7 +191,7 @@ bool HostServer::handshake(TlsConn& conn, int& width, int& height, std::string& 
             inj = &inject;
         } else if (!cfg_.synthetic) {
             session_active_ = false;
-            conn.send(MsgType::Error, pack_error(ierr));
+            conn.send(env_error(ierr));
             err = ierr;
             return false;
         }
@@ -201,9 +202,8 @@ bool HostServer::handshake(TlsConn& conn, int& width, int& height, std::string& 
 }
 
 void HostServer::handle_client(TlsConn conn) {
-    int w = 0, h = 0;
     std::string err;
-    if (!handshake(conn, w, h, err) && !err.empty()) {
+    if (!handshake(conn, err) && !err.empty()) {
         std::cerr << "peerdesk-server: session rejected: " << err << "\n";
     }
 }
@@ -212,27 +212,35 @@ void HostServer::session_loop(TlsConn& conn, ScreenSource& source, InputInject* 
     std::atomic<bool> live{true};
     std::mutex send_mu;
     std::thread cap([&] {
-        std::vector<uint8_t> rgb, jpeg;
-        const auto period = std::chrono::milliseconds(std::max(1000 / std::max(cfg_.fps, 1), 30));
+        H264Encoder enc;
+        std::string enc_err;
+        if (!enc.open(source.width() & ~1, source.height() & ~1, std::max(cfg_.fps, 1), enc_err)) {
+            std::lock_guard<std::mutex> g(send_mu);
+            conn.send(env_error(enc_err.empty() ? "Encode failed" : enc_err));
+            live = false;
+            return;
+        }
+        std::vector<uint8_t> rgb;
+        std::string annexb;
+        const auto period = std::chrono::milliseconds(std::max(1000 / std::max(cfg_.fps, 1), 16));
         while (live && !stop_) {
             std::string err;
             if (!source.grab_rgb(rgb, err)) {
                 std::lock_guard<std::mutex> g(send_mu);
-                conn.send(MsgType::Error, pack_error(err.empty() ? "Capture failed" : err));
+                conn.send(env_error(err.empty() ? "Capture failed" : err));
                 live = false;
                 break;
             }
-            if (!encode_jpeg_rgb(rgb, source.width(), source.height(), cfg_.jpeg_quality, jpeg)) {
+            if (!enc.encode_rgb(rgb, annexb, err)) {
                 std::lock_guard<std::mutex> g(send_mu);
-                conn.send(MsgType::Error, pack_error("Encode failed"));
+                conn.send(env_error(err.empty() ? "Encode failed" : err));
                 live = false;
                 break;
             }
-            {
+            if (!annexb.empty()) {
                 std::lock_guard<std::mutex> g(send_mu);
-                if (!conn.send(MsgType::VideoFrame,
-                               pack_video(static_cast<uint16_t>(source.width()),
-                                          static_cast<uint16_t>(source.height()), jpeg))) {
+                if (!conn.send(env_video(static_cast<uint32_t>(source.width()),
+                                         static_cast<uint32_t>(source.height()), annexb))) {
                     live = false;
                     break;
                 }
@@ -243,9 +251,8 @@ void HostServer::session_loop(TlsConn& conn, ScreenSource& source, InputInject* 
 
     auto last_rx = std::chrono::steady_clock::now();
     while (live && !stop_) {
-        MsgType t{};
-        std::vector<uint8_t> payload;
-        if (!conn.recv(t, payload, 250)) {
+        proto::Envelope env;
+        if (!conn.recv(env, 250)) {
             if (!conn.is_open()) {
                 live = false;
                 break;
@@ -257,27 +264,29 @@ void HostServer::session_loop(TlsConn& conn, ScreenSource& source, InputInject* 
             continue;
         }
         last_rx = std::chrono::steady_clock::now();
-        if (t == MsgType::Disconnect || t == MsgType::Error) {
+        if (env.has_disconnect() || env.has_error()) {
             live = false;
             break;
         }
-        if (t == MsgType::Ping) {
+        if (env.has_ping()) {
             std::lock_guard<std::mutex> g(send_mu);
-            conn.send(MsgType::Pong, {});
+            conn.send(env_pong());
             continue;
         }
-        if (t == MsgType::Mouse) {
-            if (const auto e = unpack_mouse(payload)) {
-                source.note_input(mouse_line(*e));
-                if (inject) inject->apply_mouse(*e);
+        if (env.has_mouse()) {
+            MouseEvent e;
+            if (mouse_from_proto(env.mouse(), e)) {
+                source.note_input(mouse_line(e));
+                if (inject) inject->apply_mouse(e);
             }
             continue;
         }
-        if (t == MsgType::Key) {
-            if (const auto e = unpack_key(payload)) {
-                source.note_input(std::string("KEY ") + (e->down ? "DOWN " : "UP ") +
-                                  std::to_string(e->keysym));
-                if (inject) inject->apply_key(*e);
+        if (env.has_key()) {
+            KeyEvent e;
+            if (key_from_proto(env.key(), e)) {
+                source.note_input(std::string("KEY ") + (e.down ? "DOWN " : "UP ") +
+                                  std::to_string(e.keysym));
+                if (inject) inject->apply_key(e);
             }
         }
     }

@@ -1,5 +1,6 @@
 #include "peerdesk/auth.hpp"
 
+#include <algorithm>
 #include <argon2.h>
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
@@ -17,9 +18,7 @@ std::array<uint8_t, 32> argon2id_raw(std::string_view password, std::span<const 
     std::array<uint8_t, 32> hash{};
     const int rc = argon2id_hash_raw(t, m, p, password.data(), password.size(), salt.data(),
                                      salt.size(), hash.data(), hash.size());
-    if (rc != ARGON2_OK) {
-        hash.fill(0);
-    }
+    if (rc != ARGON2_OK) hash.fill(0);
     return hash;
 }
 
@@ -47,6 +46,19 @@ bool verify_auth_response(std::span<const uint8_t, 32> stored_hash, const AuthCh
                           const AuthResponse& resp) {
     const auto expect = hmac_sha256(stored_hash, ch.nonce);
     return const_time_equal(expect, resp.hmac);
+}
+
+std::optional<AuthChallenge> challenge_from_bytes(std::span<const uint8_t> salt,
+                                                 std::span<const uint8_t> nonce, uint32_t t,
+                                                 uint32_t m, uint32_t p) {
+    if (salt.size() != 16 || nonce.size() != 32) return std::nullopt;
+    AuthChallenge ch;
+    std::copy(salt.begin(), salt.end(), ch.salt.begin());
+    std::copy(nonce.begin(), nonce.end(), ch.nonce.begin());
+    ch.t_cost = t;
+    ch.m_cost = m;
+    ch.parallelism = p;
+    return ch;
 }
 
 }  // namespace peerdesk

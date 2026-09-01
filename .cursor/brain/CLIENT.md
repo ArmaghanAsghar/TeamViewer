@@ -18,7 +18,7 @@ flowchart LR
 |-------|--------|
 | Source / client | Builder notes: [README.md](../../README.md), [remote-desktop-app-context.md](../../remote-desktop-app-context.md), discovery Q1 (2026-08-30) |
 | Profile / product slice assumed | Small-team LAN/VPN remote desktop; mouse+keyboard; no relay |
-| Last ingest | 2026-08-30 — senior-demo request (lock + J0–J3 waiver). Brain refresh same day: CODEMAP + stories gate point at production stack, not JPEG |
+| Last ingest | 2026-08-31 — human locked main-branch stack as written (Asio kept); P0 Widgets + vcpkg; J0–J3 self-validated `build-ready` |
 | Open conflicts | 0 remaining (C1–C2 resolved by Q1) |
 
 **How to paste:** Drop messy bullets under **Raw inbox**, then ask an agent to “ingest CLIENT.md.”

@@ -1,19 +1,27 @@
 #include "inject.hpp"
 
+#if defined(PEERDESK_HAVE_X11)
 #include <X11/Xlib.h>
 #include <X11/extensions/XTest.h>
 #include <X11/keysym.h>
+#endif
 
 namespace peerdesk {
 
 InputInject::~InputInject() {
+#if defined(PEERDESK_HAVE_X11)
     if (dpy_) {
         XCloseDisplay(static_cast<Display*>(dpy_));
         dpy_ = nullptr;
     }
+#endif
 }
 
 bool InputInject::open(std::string& err) {
+#if !defined(PEERDESK_HAVE_X11)
+    err = "XTEST input inject is only available on Linux hosts";
+    return false;
+#else
     Display* dpy = XOpenDisplay(nullptr);
     if (!dpy) {
         err = "Cannot open X11 display for input injection";
@@ -27,9 +35,11 @@ bool InputInject::open(std::string& err) {
     }
     dpy_ = dpy;
     return true;
+#endif
 }
 
 void InputInject::apply_mouse(const MouseEvent& e) {
+#if defined(PEERDESK_HAVE_X11)
     auto* dpy = static_cast<Display*>(dpy_);
     if (!dpy) return;
     XTestFakeMotionEvent(dpy, -1, e.x, e.y, CurrentTime);
@@ -43,15 +53,22 @@ void InputInject::apply_mouse(const MouseEvent& e) {
         XTestFakeButtonEvent(dpy, button, False, CurrentTime);
     }
     XFlush(dpy);
+#else
+    (void)e;
+#endif
 }
 
 void InputInject::apply_key(const KeyEvent& e) {
+#if defined(PEERDESK_HAVE_X11)
     auto* dpy = static_cast<Display*>(dpy_);
     if (!dpy || e.keysym == 0) return;
     const KeyCode code = XKeysymToKeycode(dpy, static_cast<KeySym>(e.keysym));
     if (code == 0) return;
     XTestFakeKeyEvent(dpy, code, e.down ? True : False, CurrentTime);
     XFlush(dpy);
+#else
+    (void)e;
+#endif
 }
 
 }  // namespace peerdesk

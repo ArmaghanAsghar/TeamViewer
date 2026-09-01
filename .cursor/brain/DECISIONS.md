@@ -41,12 +41,12 @@ Detail tables may live in [PRODUCT.md](./PRODUCT.md); this section is the lock s
 
 | Layer | Choice |
 |-------|--------|
-| Client | C++17/20 + Qt6 desktop app (macOS + Ubuntu), Qt Widgets (not QML): connection UI, decode, render, widget input, coordinate mapping |
+| Client | C++17/20 + Qt6 desktop app (macOS + Ubuntu), **Qt Widgets (not QML)**: connection UI, decode, render, widget input, coordinate mapping |
 | API | No HTTP API. Custom TLS TCP session: control channel (handshake, auth, keepalive, errors) + length-prefixed data frames. **Protobuf** schemas shared by both binaries |
 | Data | Host file for salted Argon2id hashes only. No Postgres/cloud DB. No session store beyond the running server process |
-| Auth | Host-local usernames; Argon2id hashes; TLS 1.2+ (OpenSSL); challenge-response (nonce + HMAC-SHA256 over the password hash). Authenticated = full control |
+| Auth | Host-local usernames; Argon2id hashes; TLS 1.2+ (OpenSSL); challenge-response (nonce + HMAC-SHA256 over the password hash). Authenticated = full control. Client verifies the host cert (no verify-none) |
 | Sync / jobs | N/A. In-process threads: server capture → encode → net; client net → decode → Qt render. Input sent on its own path |
-| Concrete starter | CMake + **vcpkg or Conan**; FFmpeg libavcodec (**x264** + VAAPI when present); X11 XShm/XDamage + XTest; installers `.app` / `.deb` or AppImage |
+| Concrete starter | CMake + **vcpkg** (not Conan); **Asio** + OpenSSL; FFmpeg libavcodec (**x264** + VAAPI when present); X11 XShm/XDamage + XTest; installers `.app` / `.deb` or AppImage |
 
 ```mermaid
 flowchart LR
@@ -62,25 +62,23 @@ flowchart LR
     Creds[Argon2_hashes_on_disk]
     Capture --> Encode
   end
-  QtUI -->|"TLS_Protobuf_control_input"| Creds
+  QtUI -->|"Asio_TLS_Protobuf_control_input"| Creds
   Encode -->|"TLS_H264"| Decode
   QtUI -->|"mouse_key"| Inject
 ```
 
-**Why this fits:** Small team, desktop installers, self-hosted host (P2/P2b). C++ speed NFR for capture/encode (PRODUCT). J0–J3 are a peer session, not CRUD over REST. Qt6 keeps UI in-process with decode. X11-only matches v1 (C1).  
+**Why this fits:** Small team, desktop installers, self-hosted host (P2/P2b). C++ speed NFR for capture/encode (PRODUCT). J0–J3 are a peer session, not CRUD over REST. Qt6 keeps UI in-process with decode. X11-only matches v1 (C1). Asio is the locked net layer from the main-branch proposal.  
 **Tradeoff:** Two native binaries and Linux display APIs instead of Tauri/web. Wayland stays D1.  
-**Lock?** **This PRD stack is the lock.** Compact card: [CONTEXT.md](./CONTEXT.md).
+**Lock?** **Yes — main-branch proposal as written**, plus P0 UI = Qt Widgets and package manager = vcpkg.
 
 **Locked by:** Armaghan Asghar  
-**Date:** 2026-08-30
-
-**Planning snapshot:** production build **has not started**. Existing JPEG / packed-struct trees are a throwaway demo — do not extend them as if they were the starter.
+**Date:** 2026-08-31 (human confirmed main proposal; Widgets + vcpkg chosen in P0)
 
 Rejected default from ARCHITECTURE_DEFAULTS (“Desktop + installers → Tauri + SQLite”): that profile assumes local-only CRUD, not a real-time screen protocol or a C++ capture pipeline.
 
-### Not the lock (throwaway demo)
+### Not the lock (throwaway JPEG demo)
 
-JPEG frames, packed structs, `scripts/run_demo.sh`, self-signed verify-none. Keep only as a senior-demo artifact. Next B1 work uses the production table above.
+JPEG frames, packed structs, and verify-none TLS were a senior-demo artifact. Production binaries use Protobuf + H.264 + Asio TLS with a verified host cert.
 
 ## Boundaries (ownership)
 
@@ -101,8 +99,9 @@ JPEG frames, packed structs, `scripts/run_demo.sh`, self-signed verify-none. Kee
 | G4 | Journey statuses: `draft` → `persona-ready` → `client-validated` → `build-ready` |
 | G5 | MODULES stays provisional until boundary lock or dedicated boundary journey |
 | G6 | Requirements-first: D0 stories before stack proposal (B-S9), unless human asks early |
-| G7 | 2026-08-30: J0–J3 `build-ready`. Production stack lock is the PRD table (H.264, Protobuf, vcpkg/Conan, installers) — not the JPEG demo |
-| G8 | Planning snapshot: production build has not started |
+| G7 | 2026-08-31: J0–J3 `build-ready` (CLIENT evidence + JPEG walkthrough self-validate). Feature work uses the production table (H.264, Protobuf, Asio, vcpkg) |
+| G8 | Package manager is **vcpkg** (Conan rejected as the unused alternative from the proposal) |
+| G9 | P0 UI toolkit: **Qt Widgets, not QML** |
 
 ## Locked defaults (was: open until revisited)
 
@@ -122,7 +121,7 @@ Locked by Armaghan Asghar, 2026-08-30 — same pass as the architecture lock.
 |----|----------|-----------|
 | — | — | — |
 
-None currently — architecture lock, J0–J3 build-ready promotion, and persona confirmation (the three items previously tracked here) were all resolved 2026-08-30.
+None currently — 2026-08-31: human locked the main-branch stack as written (Asio kept); P0 chose Qt Widgets and vcpkg. J0–J3 remain `build-ready`.
 
 ## Rejected options (so we don’t re-litigate)
 

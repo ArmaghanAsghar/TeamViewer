@@ -36,15 +36,15 @@ Agent acts as **requirements engineer**: complete groups top-to-bottom; propose 
 - [x] Architecture profile + concrete starter locked **after** D0 stories — DECISIONS §Architecture
 - [x] RULES / stack-contracts step done
 
-Stack is **locked** in DECISIONS / [CONTEXT.md](./CONTEXT.md): FFmpeg H.264, Protobuf, vcpkg/Conan, installers. JPEG demo is not the lock.
+Stack is **locked** in DECISIONS / [CONTEXT.md](./CONTEXT.md): FFmpeg H.264, Protobuf, Asio, **vcpkg**, Qt Widgets, installers.
 
 ## Evidence (optional)
 
 - [x] CLIENT inbox process understood — [CLIENT.md](./CLIENT.md)
 - [x] Open conflicts resolved or parked
 
-C1 (Wayland in v1) and C2 (reconnect as D0) resolved. J0–J3 are `build-ready` (2026-08-30) via persona confirmation + demo waiver.
+C1 (Wayland in v1) and C2 (reconnect as D0) resolved. J0–J3 are `build-ready` (self-validated 2026-08-31 from CLIENT evidence + JPEG walkthrough). Feature work uses the production stack.
 
 ## Still missing
 
-None for D0. Production B1 has not started. D1 (J4–J6) remains `draft`. Current paths vs B1 target: [CODEMAP.md](./CODEMAP.md).
+None for D0. D1 (J4–J6) remains `draft`. Paths: [CODEMAP.md](./CODEMAP.md).

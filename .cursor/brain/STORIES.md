@@ -25,13 +25,13 @@ Solo walkthrough of existing CLIENT evidence + the explicit “make a demo” as
 
 | Journey | FLOWS status | Stories | Feature work allowed? |
 |---------|--------------|---------|------------------------|
-| J0 | build-ready | Yes | Yes — **production stack** (H.264 / Protobuf / vcpkg). Do not extend JPEG as the starter |
+| J0 | build-ready | Yes | Yes — **production stack** (H.264 / Protobuf / Asio / vcpkg) |
 | J1 | build-ready | Yes | Yes — production stack |
 | J2 | build-ready | Yes | Yes — production stack |
 | J3 | build-ready | Yes | Yes — production stack |
 | J4–J6 | draft | No | No |
 
-The 2026-08-30 waiver shipped the LAN JPEG demo. That artifact stays for walkthrough (`docs/DEMO.md`). New J0–J3 code follows [CONTEXT.md](./CONTEXT.md), not `shared/src/jpeg.cpp`.
+The 2026-08-30 waiver shipped a LAN JPEG demo. Production J0–J3 (2026-08-31) follows [CONTEXT.md](./CONTEXT.md): Protobuf, H.264, Asio TLS, vcpkg. JPEG/packed structs are not the wire contract.
 
 Spine / tooling (repo setup, lint, auth shell with no domain inventing) may proceed during discovery.
 

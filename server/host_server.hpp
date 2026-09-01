@@ -4,14 +4,12 @@
 #include "inject.hpp"
 #include "users.hpp"
 
-#include "peerdesk/tls.hpp"
+#include "peerdesk/net.hpp"
 
 #include <array>
 #include <atomic>
 #include <cstdint>
 #include <filesystem>
-#include <memory>
-#include <mutex>
 #include <string>
 
 namespace peerdesk {
@@ -24,8 +22,7 @@ public:
         std::filesystem::path data_dir;
         bool synthetic = false;
         bool inject = true;
-        int fps = 10;
-        int jpeg_quality = 55;
+        int fps = 15;
         std::string bootstrap_user = "jordan";
         std::string bootstrap_password = "peerdesk";
     };
@@ -36,10 +33,11 @@ public:
     void request_stop();
     uint16_t port() const { return listener_.port(); }
     bool is_listening() const { return listener_.is_open(); }
+    std::filesystem::path cert_path() const;
 
 private:
     void handle_client(TlsConn conn);
-    bool handshake(TlsConn& conn, int& width, int& height, std::string& err);
+    bool handshake(TlsConn& conn, std::string& err);
     void session_loop(TlsConn& conn, ScreenSource& source, InputInject* inject);
 
     Config cfg_;

@@ -27,9 +27,17 @@ public:
     void note_input(const std::string&) override {}
 
 private:
-    void* dpy_ = nullptr;  // Display*
+    void close();
+    void* dpy_ = nullptr;
+    void* shm_image_ = nullptr;
+    void* shm_info_ = nullptr;
+    void* damage_ = nullptr;
+    int damage_event_base_ = 0;
+    bool use_shm_ = false;
+    bool first_ = true;
     int width_ = 0;
     int height_ = 0;
+    std::vector<uint8_t> last_rgb_;
 };
 
 class SyntheticCapture : public ScreenSource {

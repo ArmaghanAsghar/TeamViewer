@@ -1,0 +1,21 @@
+{
+  "name": "peerdesk",
+  "version-string": "0.1.0",
+  "description": "PeerDesk — LAN/VPN remote desktop for small teams",
+  "dependencies": [
+    "asio",
+    "openssl",
+    "protobuf",
+    "libargon2",
+    {
+      "name": "ffmpeg",
+      "default-features": false,
+      "features": ["avcodec", "swscale", "x264"]
+    },
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": ["gui", "widgets"]
+    }
+  ]
+}

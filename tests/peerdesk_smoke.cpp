@@ -1,18 +1,19 @@
 #include "host_server.hpp"
 
 #include "peerdesk/auth.hpp"
-#include "peerdesk/jpeg.hpp"
+#include "peerdesk/codec.hpp"
 #include "peerdesk/map.hpp"
+#include "peerdesk/net.hpp"
 #include "peerdesk/protocol.hpp"
-#include "peerdesk/tls.hpp"
 
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
-#include <unistd.h>
 #include <filesystem>
 #include <iostream>
+#include <span>
 #include <thread>
+#include <unistd.h>
 
 namespace {
 
@@ -40,21 +41,15 @@ void test_map() {
 }
 
 void test_protocol() {
-    peerdesk::Hello h{1, "jordan"};
-    const auto raw = peerdesk::pack_hello(h);
-    const auto back = peerdesk::unpack_hello(raw);
-    expect(back && back->username == "jordan" && back->version == 1, "hello roundtrip");
-
-    peerdesk::AuthChallenge ch;
-    ch.t_cost = 2;
-    ch.salt.fill(7);
-    ch.nonce.fill(3);
-    const auto cb = peerdesk::unpack_challenge(peerdesk::pack_challenge(ch));
-    expect(cb && cb->t_cost == 2 && cb->salt[0] == 7, "challenge roundtrip");
-
+    const auto hello = peerdesk::env_hello("jordan");
+    expect(hello.has_hello() && hello.hello().username() == "jordan" &&
+               hello.hello().version() == peerdesk::kProtocolVersion,
+           "hello envelope");
     peerdesk::MouseEvent m{peerdesk::MouseAction::Down, 1, 100, 200, 0};
-    const auto mb = peerdesk::unpack_mouse(peerdesk::pack_mouse(m));
-    expect(mb && mb->x == 100 && mb->y == 200 && mb->action == peerdesk::MouseAction::Down,
+    const auto me = peerdesk::env_mouse(m);
+    peerdesk::MouseEvent back;
+    expect(me.has_mouse() && peerdesk::mouse_from_proto(me.mouse(), back) && back.x == 100 &&
+               back.action == peerdesk::MouseAction::Down,
            "mouse roundtrip");
 }
 
@@ -72,35 +67,49 @@ void test_auth() {
     expect(!peerdesk::verify_auth_response(hash, ch, bad), "hmac rejects bad password");
 }
 
-void test_jpeg() {
-    const int w = 16, h = 16;
-    std::vector<uint8_t> rgb(static_cast<size_t>(w * h * 3));
-    for (size_t i = 0; i < rgb.size(); i += 3) {
-        rgb[i] = 200;
-        rgb[i + 1] = 40;
-        rgb[i + 2] = 40;
+void test_h264() {
+    peerdesk::H264Encoder enc;
+    peerdesk::H264Decoder dec;
+    std::string err;
+    expect(enc.open(64, 64, 10, err), "h264 encoder open");
+    expect(dec.open(err), "h264 decoder open");
+    std::vector<uint8_t> rgb(64 * 64 * 3, 40);
+    for (size_t i = 0; i < rgb.size(); i += 3) rgb[i] = 200;
+    std::string annexb;
+    bool got = false;
+    for (int i = 0; i < 8 && !got; ++i) {
+        expect(enc.encode_rgb(rgb, annexb, err), "h264 encode");
+        if (annexb.empty()) continue;
+        std::vector<uint8_t> out;
+        int w = 0, h = 0;
+        got = dec.decode_to_rgb(std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(annexb.data()),
+                                                         annexb.size()),
+                                out, w, h, err) &&
+              w == 64 && h == 64 && out.size() == rgb.size();
     }
-    std::vector<uint8_t> jpeg;
-    expect(peerdesk::encode_jpeg_rgb(rgb, w, h, 70, jpeg) && jpeg.size() > 20, "jpeg encode");
-    std::vector<uint8_t> out;
-    int ow = 0, oh = 0;
-    expect(peerdesk::decode_jpeg_rgb(jpeg, out, ow, oh) && ow == w && oh == h, "jpeg decode");
+    expect(got, "h264 roundtrip");
 }
 
 bool client_hello_auth(peerdesk::TlsConn& c, const std::string& user, const std::string& pass,
-                       peerdesk::MsgType& t, std::vector<uint8_t>& payload) {
-    peerdesk::Hello h{peerdesk::kProtocolVersion, user};
-    if (!c.send(peerdesk::MsgType::Hello, peerdesk::pack_hello(h))) return false;
-    if (!c.recv(t, payload, 8000) || t != peerdesk::MsgType::AuthChallenge) return false;
-    const auto ch = peerdesk::unpack_challenge(payload);
+                       peerdesk::proto::Envelope& env) {
+    if (!c.send(peerdesk::env_hello(user))) return false;
+    if (!c.recv(env, 8000) || !env.has_auth_challenge()) return false;
+    const auto ch = peerdesk::challenge_from_bytes(
+        std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(env.auth_challenge().salt().data()),
+                                 env.auth_challenge().salt().size()),
+        std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(env.auth_challenge().nonce().data()),
+                                 env.auth_challenge().nonce().size()),
+        env.auth_challenge().t_cost(), env.auth_challenge().m_cost(),
+        env.auth_challenge().parallelism());
     if (!ch) return false;
     const auto resp = peerdesk::make_auth_response(pass, *ch);
-    if (!c.send(peerdesk::MsgType::AuthResponse, peerdesk::pack_auth_response(resp))) return false;
-    return c.recv(t, payload, 15000);
+    if (!c.send(peerdesk::env_auth_response(resp.hmac))) return false;
+    return c.recv(env, 15000);
 }
 
 void test_session() {
-    const auto dir = std::filesystem::temp_directory_path() / ("peerdesk-smoke-" + std::to_string(getpid()));
+    const auto dir =
+        std::filesystem::temp_directory_path() / ("peerdesk-smoke-" + std::to_string(getpid()));
     std::filesystem::remove_all(dir);
 
     peerdesk::HostServer::Config cfg;
@@ -122,69 +131,68 @@ void test_session() {
     }
     const auto port = server.port();
     expect(port != 0, "ephemeral port");
+    const auto ca = server.cert_path();
     std::thread th([&] { server.run(); });
 
-    // Bad password
+    peerdesk::proto::Envelope env;
     {
         std::string e;
-        auto c = peerdesk::TlsConn::connect("127.0.0.1", port, e);
+        auto c = peerdesk::TlsConn::connect("127.0.0.1", port, ca, e);
         expect(c.has_value(), "tls connect (bad-pass path)");
         if (c) {
-            peerdesk::MsgType t{};
-            std::vector<uint8_t> payload;
-            expect(client_hello_auth(*c, "jordan", "wrong", t, payload), "auth exchange (bad)");
-            expect(t == peerdesk::MsgType::AuthFail, "wrong password -> AuthFail");
-            const auto r = peerdesk::unpack_auth_fail(payload);
-            expect(r && *r == peerdesk::AuthFailReason::BadCredentials, "AuthFail is bad-credentials");
+            expect(client_hello_auth(*c, "jordan", "wrong", env), "auth exchange (bad)");
+            expect(env.has_auth_fail(), "wrong password -> AuthFail");
+            expect(env.auth_fail().reason() == peerdesk::proto::AUTH_FAIL_BAD_CREDENTIALS,
+                   "AuthFail is bad-credentials");
         }
     }
 
-    // Good password + video + busy + reconnect
     std::string e;
-    auto live = peerdesk::TlsConn::connect("127.0.0.1", port, e);
+    auto live = peerdesk::TlsConn::connect("127.0.0.1", port, ca, e);
     expect(live.has_value(), "tls connect (good)");
-    peerdesk::MsgType t{};
-    std::vector<uint8_t> payload;
-    expect(live && client_hello_auth(*live, "jordan", "peerdesk", t, payload), "auth exchange (good)");
-    expect(t == peerdesk::MsgType::AuthOk, "good password -> AuthOk");
-    const auto ok = peerdesk::unpack_auth_ok(payload);
-    expect(ok && ok->width >= 320 && ok->height >= 200, "auth-ok has host size");
+    expect(live && client_hello_auth(*live, "jordan", "peerdesk", env), "auth exchange (good)");
+    expect(env.has_auth_ok(), "good password -> AuthOk");
+    expect(env.auth_ok().width() >= 320 && env.auth_ok().height() >= 200, "auth-ok has host size");
 
     bool got_frame = false;
-    for (int i = 0; i < 40 && live; ++i) {
-        if (!live->recv(t, payload, 500)) continue;
-        if (t == peerdesk::MsgType::VideoFrame) {
-            const auto v = peerdesk::unpack_video(payload);
-            got_frame = v && !v->jpeg.empty();
+    for (int i = 0; i < 80 && live; ++i) {
+        if (!live->recv(env, 500)) continue;
+        if (env.has_video() && !env.video().h264().empty()) {
+            got_frame = true;
             break;
         }
     }
-    expect(got_frame, "received a video frame");
+    expect(got_frame, "received an H.264 video frame");
 
-    auto busy = peerdesk::TlsConn::connect("127.0.0.1", port, e);
+    auto busy = peerdesk::TlsConn::connect("127.0.0.1", port, ca, e);
     expect(busy.has_value(), "second viewer can reach host");
     if (busy) {
-        expect(client_hello_auth(*busy, "jordan", "peerdesk", t, payload), "second viewer auth");
-        expect(t == peerdesk::MsgType::AuthFail, "second viewer rejected");
-        const auto r = peerdesk::unpack_auth_fail(payload);
-        expect(r && *r == peerdesk::AuthFailReason::SessionBusy, "busy reason");
+        expect(client_hello_auth(*busy, "jordan", "peerdesk", env), "second viewer auth");
+        expect(env.has_auth_fail(), "second viewer rejected");
+        expect(env.auth_fail().reason() == peerdesk::proto::AUTH_FAIL_SESSION_BUSY, "busy reason");
         busy->close();
     }
 
     if (live) {
-        live->send(peerdesk::MsgType::Disconnect, {});
+        live->send(peerdesk::env_disconnect());
         live->close();
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::this_thread::sleep_for(std::chrono::milliseconds(400));
 
-    auto again = peerdesk::TlsConn::connect("127.0.0.1", port, e);
+    auto again = peerdesk::TlsConn::connect("127.0.0.1", port, ca, e);
     expect(again.has_value(), "reconnect tls");
-    expect(again && client_hello_auth(*again, "jordan", "peerdesk", t, payload), "reconnect auth");
-    expect(t == peerdesk::MsgType::AuthOk, "reconnect without restarting server");
+    expect(again && client_hello_auth(*again, "jordan", "peerdesk", env), "reconnect auth");
+    expect(env.has_auth_ok(), "reconnect without restarting server");
     server.request_stop();
     if (again) again->close();
     th.join();
     std::filesystem::remove_all(dir);
+}
+
+void test_tls_requires_ca() {
+    std::string e;
+    auto c = peerdesk::TlsConn::connect("127.0.0.1", 1, {}, e);
+    expect(!c && e.find("PEERDESK_CA_FILE") != std::string::npos, "connect without CA is refused");
 }
 
 }  // namespace
@@ -194,12 +202,13 @@ int main() {
     test_map();
     test_protocol();
     test_auth();
-    test_jpeg();
+    test_h264();
+    test_tls_requires_ca();
     test_session();
     if (g_fails) {
         std::cerr << g_fails << " check(s) failed\n";
         return 1;
     }
-    std::cout << "All PeerDesk smoke checks passed (J0/J1/J3 + mapping + JPEG).\n";
+    std::cout << "All PeerDesk smoke checks passed (J0–J3, Protobuf, H.264, pinned TLS).\n";
     return 0;
 }

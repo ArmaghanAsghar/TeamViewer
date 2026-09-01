@@ -1,0 +1,29 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "vcpkg",
+      "displayName": "Ninja + vcpkg (locked)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "homebrew",
+      "displayName": "Ninja + Homebrew prefixes (local Mac)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_PREFIX_PATH": "/opt/homebrew;/opt/homebrew/opt/qtbase;/opt/homebrew/opt/openssl@3;/opt/homebrew/opt/ffmpeg"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "vcpkg", "configurePreset": "vcpkg" },
+    { "name": "homebrew", "configurePreset": "homebrew" }
+  ]
+}
