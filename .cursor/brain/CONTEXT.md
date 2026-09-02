@@ -20,4 +20,4 @@ flowchart LR
 | Build | **CMake + vcpkg** |
 | Ship | macOS `.app` client; Ubuntu `.deb`/AppImage client+server |
 
-**Locked by:** Armaghan Asghar, 2026-08-31 (main proposal as written; Widgets + vcpkg in P0). J0–J3 = `build-ready`. Paths: [CODEMAP.md](./CODEMAP.md). Detail: [DECISIONS.md](./DECISIONS.md), [PROJECT_DESIGN.md](../../PROJECT_DESIGN.md).
+**Locked by:** Armaghan Asghar, 2026-08-31 (main proposal as written; Widgets + vcpkg in P0). J0–J3 = `build-ready`. **Source trees cleared 2026-09-02** — learning path from scratch; [CODEMAP.md](./CODEMAP.md) is empty. Detail: [DECISIONS.md](./DECISIONS.md), [PROJECT_DESIGN.md](../../PROJECT_DESIGN.md).

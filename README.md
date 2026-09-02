@@ -1,59 +1,14 @@
-# PeerDesk
+# ALTER learning path
 
-Small-team **LAN/VPN remote desktop**: a teammate on macOS or Ubuntu views and controls an **Ubuntu** host with mouse and keyboard, then disconnects and reconnects **without restarting the host server**.
+This repo is a **systems-programming curriculum** for a self-hosted, peer-to-peer remote desktop and terminal (conceptually modeled on NoMachine NX). There is **no application code yet**. Labs start from scratch when you ask for a stage.
 
-Shipped name is **PeerDesk** (repo nickname “TeamViewer”).
+Syllabus: [`.cursor/brain/ALTER.md`](.cursor/brain/ALTER.md) (Advisor, Librarian, Tutor, Editor, Roommate). Do not implement labs under `client/`, `server/`, or `shared/` — those names are reserved for a future shipped product. When a lab is requested, it gets its own tree (for example `alter-labs/`).
 
 ```mermaid
 flowchart LR
-  subgraph viewer [Viewer]
-    QtUI[Qt6_Widgets]
-  end
-  subgraph host [Ubuntu_host]
-    Srv[peerdesk_server]
-  end
-  QtUI -->|"Asio_TLS_Protobuf_input"| Srv
-  Srv -->|"H264_frames"| QtUI
+  Brain[ALTER_md] --> Roles[Five_roles]
+  Roles -.->|later_labs| LabTree[alter_labs]
+  Roles -.->|never| ShipTrees[client_server_shared]
 ```
 
-## Build
-
-Locked stack: CMake + **vcpkg**, Qt6 Widgets, Asio TLS, Protobuf, FFmpeg H.264. See [`.cursor/brain/DECISIONS.md`](.cursor/brain/DECISIONS.md).
-
-```bash
-# Preferred (locked):
-export VCPKG_ROOT=/path/to/vcpkg
-./scripts/bootstrap-vcpkg.sh
-
-# Local Homebrew prefixes (macOS, same APIs):
-cmake --preset homebrew
-cmake --build --preset homebrew -j
-```
-
-| Binary | Role |
-|--------|------|
-| `peerdesk-server` | Ubuntu host (J0) |
-| `peerdesk-client` | Viewer UI (J1–J3); macOS `.app` |
-| `peerdesk-smoke` | Protocol, auth, busy session, reconnect, H.264 |
-
-```bash
-./build/peerdesk-smoke
-./scripts/run_demo.sh          # synthetic host canvas
-# or: ./scripts/run_demo.sh x11
-```
-
-Default login: **jordan** / **peerdesk**. The server prints a TLS fingerprint and the `PEERDESK_CA_FILE` path; the client must trust that `server.crt`. Walkthrough: [docs/DEMO.md](docs/DEMO.md).
-
-## What v1 is (and is not)
-
-| In v1 | Explicitly out of scope |
-|-------|-------------------------|
-| TLS 1.2+ with pinned host cert | File transfer, audio, clipboard |
-| Protobuf control + H.264 video | Wayland host, multi-monitor |
-| Mouse + keyboard with coordinate mapping | Relay / “connect from anywhere” |
-| One viewer per host; reconnect without restart | Saved profiles, view-only role |
-
-## Packaging
-
-- macOS client: `./scripts/package-macos.sh` (`.app` via `macdeployqt`)
-- Ubuntu: `./scripts/package-linux.sh` (`.deb` via CPack; AppImage if `linuxdeploy` is installed)
+Product discovery notes still live under `.cursor/brain/` (PRODUCT, DECISIONS, …). They are **not** the teaching syllabus and they do not imply source trees exist.

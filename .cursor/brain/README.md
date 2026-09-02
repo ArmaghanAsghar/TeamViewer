@@ -55,4 +55,4 @@ Agent plans / architecture / multi-step proposals lead with **1–3 Mermaid diag
 
 ## Current phase
 
-See [CONTEXT.md](./CONTEXT.md) (compact lock). D0 J0–J3 `build-ready`. Production stack locked (H.264, Protobuf, vcpkg/Conan, installers). JPEG tree is a throwaway demo. Production B1 has not started — see [CODEMAP.md](./CODEMAP.md).
+Code trees were cleared (2026-09-02): **learning from scratch**. Teach from [ALTER.md](./ALTER.md). Product locks still sit in [DECISIONS.md](./DECISIONS.md) / [CONTEXT.md](./CONTEXT.md) but **do not imply** `client/` `server/` `shared/` exist. See [CODEMAP.md](./CODEMAP.md).

@@ -43,7 +43,6 @@ Execute stages **in order**. Validate each milestone (in a future lab tree) with
 
 - **Concepts:** POSIX sockets (`SOCK_STREAM`, `SOCK_DGRAM`), non-blocking I/O, `epoll` or `select`, session negotiation.
 - **Blueprint:** Event loop listens on **TCP 4000**. Accept connections, read capability strings, spawn session state. Negotiate a parallel UDP socket for multimedia.
-- **Lab tree:** [`alter-labs/stage1/server.cpp`](../../alter-labs/stage1/server.cpp) — POSIX daemon + TCP 4000. Never under `client/` `server/` `shared/`.
 - **Milestone:** Client–server pair completes a secure handshake, TCP control channel, negotiated UDP port and key, two-way packet exchange.
 
 ### Stage 2 — Graphics and codec pipeline
